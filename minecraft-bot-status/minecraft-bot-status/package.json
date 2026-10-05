@@ -1,0 +1,16 @@
+{
+  "name": "minecraft-bot-status",
+  "version": "1.0.0",
+  "description": "Minecraft Mineflayer bot with a public live status page for Render",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "keywords": ["minecraft", "mineflayer", "render", "status"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "mineflayer": "github:Complexity-ML/mineflayer-26.2"
+  }
+}

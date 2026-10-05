@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: minecraft-bot-status
+    runtime: node
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: MINECRAFT_HOST
+        value: sarifon-ki-minecraft.aternos.me
+      - key: MINECRAFT_PORT
+        value: "42934"
+      - key: MINECRAFT_USERNAME
+        value: BotPlayer
+      - key: MINECRAFT_VERSION
+        value: "26.2"
+      - key: MINECRAFT_AUTH
+        value: offline
