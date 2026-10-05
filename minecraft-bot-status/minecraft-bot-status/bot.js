@@ -14,6 +14,8 @@ const MAX_LOGS = 200
 const RECONNECT_MS = 5000
 
 let bot = null
+let botId = 0
+let connectWatchdog = null
 let reconnectTimer = null
 let restartTimer = null
 let stopping = false
@@ -95,11 +97,12 @@ function scheduleReconnect() {
 }
 
 function killBot() {
+  botId++ // purane bot ke saare events ab ignore honge
+  if (connectWatchdog) { clearTimeout(connectWatchdog); connectWatchdog = null }
   if (!bot) return
   const old = bot
   bot = null
-  try { old.removeAllListeners() } catch (_) {}
-  old.on('error', () => {}) // listeners hatane ke baad crash na ho
+  old.on('error', () => {}) // end() ke baad aane wale errors se crash na ho
   try { old.end() } catch (_) {}
 }
 
@@ -116,11 +119,11 @@ function restartBot() {
     playerNames: [],
     maxPlayers: null
   })
-  addLog('warn', 'Restart requested from website', 'Bot stopped, starting fresh in 3s')
+  addLog('warn', 'Restart requested from website', 'Bot stopped, starting fresh in 6s')
   restartTimer = setTimeout(() => {
     restartTimer = null
     connectBot()
-  }, 3000)
+  }, 6000) // server ko purana session band karne ka time
   return true
 }
 
@@ -128,41 +131,56 @@ function connectBot() {
   if (stopping) return
 
   killBot()
+  const myId = botId
+  const alive = () => myId === botId && !stopping
 
   setState('connecting', `Connecting to ${HOST}:${MC_PORT}...`)
   addLog('info', `Connecting to Minecraft server ${HOST}:${MC_PORT}`)
 
   try {
-    bot = mineflayer.createBot({
+    const b = mineflayer.createBot({
       host: HOST,
       port: MC_PORT,
       username: USERNAME,
       version: VERSION,
       auth: AUTH
     })
+    bot = b
 
-    bot.once('spawn', () => {
+    // Agar 45s me join nahi hua to hang maanke dobara try karo
+    connectWatchdog = setTimeout(() => {
+      connectWatchdog = null
+      if (!alive() || state.status !== 'connecting') return
+      addLog('warn', 'Connect timeout', 'No response in 45s, retrying')
+      killBot()
+      scheduleReconnect()
+    }, 45000)
+
+    b.once('spawn', () => {
+      if (!alive()) return
+      if (connectWatchdog) { clearTimeout(connectWatchdog); connectWatchdog = null }
       setState('online', 'Bot is inside Minecraft', {
         lastConnected: new Date().toISOString(),
         lastError: null
       })
-      addLog('success', `Bot joined Minecraft as ${bot.username}`)
-      try { bot.chat(`Hello! Main ${bot.username} hoon 😎`) } catch (_) {}
+      addLog('success', `Bot joined Minecraft as ${b.username}`)
+      try { b.chat(`Hello! Main ${b.username} hoon 😎`) } catch (_) {}
       updatePlayers()
     })
 
-    bot.on('playerJoined', updatePlayers)
-    bot.on('playerLeft', updatePlayers)
+    b.on('playerJoined', () => { if (alive()) updatePlayers() })
+    b.on('playerLeft', () => { if (alive()) updatePlayers() })
 
-    bot.on('chat', (username, message) => {
-      if (username === bot.username) return
+    b.on('chat', (username, message) => {
+      if (!alive() || username === b.username) return
       if (message === '!hello') {
-        try { bot.chat(`Hello ${username}! 👋`) } catch (_) {}
+        try { b.chat(`Hello ${username}! 👋`) } catch (_) {}
         addLog('info', `Replied to ${username} with !hello`)
       }
     })
 
-    bot.on('kicked', reason => {
+    b.on('kicked', reason => {
+      if (!alive()) return
       const text = typeof reason === 'string' ? reason : JSON.stringify(reason)
       setState('offline', 'Bot was kicked from Minecraft', {
         lastDisconnected: new Date().toISOString(),
@@ -171,8 +189,9 @@ function connectBot() {
       addLog('warn', 'Bot kicked from Minecraft', text)
     })
 
-    bot.on('end', reason => {
-      if (stopping) return
+    b.on('end', reason => {
+      if (!alive()) return
+      if (connectWatchdog) { clearTimeout(connectWatchdog); connectWatchdog = null }
       const text = reason ? String(reason) : 'Connection ended'
       setState('offline', 'Minecraft connection ended', {
         lastDisconnected: new Date().toISOString(),
@@ -182,7 +201,8 @@ function connectBot() {
       scheduleReconnect()
     })
 
-    bot.on('error', error => {
+    b.on('error', error => {
+      if (!alive()) return
       const text = error && error.message ? error.message : String(error)
       setState('error', 'Minecraft bot error', { lastError: text })
       addLog('error', 'Mineflayer error', text)
@@ -256,11 +276,21 @@ server.listen(PORT, '0.0.0.0', () => {
 process.on('SIGTERM', shutdown)
 process.on('SIGINT', shutdown)
 
+process.on('uncaughtException', err => {
+  addLog('error', 'Uncaught exception', err && err.stack ? err.stack : err)
+  killBot()
+  scheduleReconnect()
+})
+process.on('unhandledRejection', err => {
+  addLog('error', 'Unhandled rejection', err && err.message ? err.message : err)
+})
+
 function shutdown() {
   if (stopping) return
   stopping = true
   if (reconnectTimer) clearTimeout(reconnectTimer)
   if (restartTimer) clearTimeout(restartTimer)
+  if (connectWatchdog) clearTimeout(connectWatchdog)
   try { if (bot) bot.end() } catch (_) {}
   for (const res of clients) {
     try { res.end() } catch (_) {}
