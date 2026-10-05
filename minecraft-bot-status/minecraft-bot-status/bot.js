@@ -9,11 +9,13 @@ const MC_PORT = Number(process.env.MINECRAFT_PORT || 42934)
 const USERNAME = process.env.MINECRAFT_USERNAME || 'BotPlayer'
 const VERSION = process.env.MINECRAFT_VERSION || '26.2'
 const AUTH = process.env.MINECRAFT_AUTH || 'offline'
+const RESTART_KEY = process.env.RESTART_KEY || '' // optional: set karoge to restart ke liye key maangega
 const MAX_LOGS = 200
 const RECONNECT_MS = 5000
 
 let bot = null
 let reconnectTimer = null
+let restartTimer = null
 let stopping = false
 const clients = new Set()
 const logs = []
@@ -27,7 +29,10 @@ const state = {
   lastError: null,
   username: USERNAME,
   server: `${HOST}:${MC_PORT}`,
-  version: VERSION
+  version: VERSION,
+  players: 0,
+  playerNames: [],
+  maxPlayers: null
 }
 
 function addLog(level, message, details = null) {
@@ -66,22 +71,63 @@ function broadcast() {
   }
 }
 
+// Bot khud tab-list se players count karta hai (bot ko chhodkar)
+function updatePlayers() {
+  let names = []
+  if (bot && state.status === 'online' && bot.players) {
+    names = Object.keys(bot.players).filter(n => n !== bot.username)
+  }
+  const max = bot && bot.game ? (bot.game.maxPlayers || null) : null
+  if (state.players === names.length && state.maxPlayers === max && state.playerNames.join() === names.join()) return
+  state.players = names.length
+  state.playerNames = names
+  state.maxPlayers = max
+  broadcast()
+}
+setInterval(updatePlayers, 5000)
+
 function scheduleReconnect() {
-  if (stopping || reconnectTimer) return
+  if (stopping || reconnectTimer || restartTimer) return
   reconnectTimer = setTimeout(() => {
     reconnectTimer = null
     connectBot()
   }, RECONNECT_MS)
 }
 
+function killBot() {
+  if (!bot) return
+  const old = bot
+  bot = null
+  try { old.removeAllListeners() } catch (_) {}
+  old.on('error', () => {}) // listeners hatane ke baad crash na ho
+  try { old.end() } catch (_) {}
+}
+
+// Sab kuch stop karke bot ko fresh start karta hai
+function restartBot() {
+  if (stopping || restartTimer) return false
+  if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null }
+  killBot()
+  setState('starting', 'Restarting bot...', {
+    lastConnected: null,
+    lastDisconnected: new Date().toISOString(),
+    lastError: null,
+    players: 0,
+    playerNames: [],
+    maxPlayers: null
+  })
+  addLog('warn', 'Restart requested from website', 'Bot stopped, starting fresh in 3s')
+  restartTimer = setTimeout(() => {
+    restartTimer = null
+    connectBot()
+  }, 3000)
+  return true
+}
+
 function connectBot() {
   if (stopping) return
 
-  if (bot) {
-    try { bot.removeAllListeners() } catch (_) {}
-    try { bot.end() } catch (_) {}
-    bot = null
-  }
+  killBot()
 
   setState('connecting', `Connecting to ${HOST}:${MC_PORT}...`)
   addLog('info', `Connecting to Minecraft server ${HOST}:${MC_PORT}`)
@@ -102,7 +148,11 @@ function connectBot() {
       })
       addLog('success', `Bot joined Minecraft as ${bot.username}`)
       try { bot.chat(`Hello! Main ${bot.username} hoon 😎`) } catch (_) {}
+      updatePlayers()
     })
+
+    bot.on('playerJoined', updatePlayers)
+    bot.on('playerLeft', updatePlayers)
 
     bot.on('chat', (username, message) => {
       if (username === bot.username) return
@@ -150,10 +200,9 @@ const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`)
 
   if (url.pathname === '/health') {
-    // Render health checks should verify that the web service is alive.
-    // The Minecraft bot state is returned separately in the JSON payload.
+    // Web service alive hai ya nahi (bot ki state JSON me alag se milti hai)
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' })
-    return res.end(JSON.stringify({ ok: healthy, ...publicState() }))
+    return res.end(JSON.stringify({ ok: true, ...publicState() }))
   }
 
   if (url.pathname === '/api/status') {
@@ -162,6 +211,18 @@ const server = http.createServer((req, res) => {
       'Cache-Control': 'no-store'
     })
     return res.end(JSON.stringify(publicState()))
+  }
+
+  if (url.pathname === '/api/restart') {
+    const json = { 'Content-Type': 'application/json; charset=utf-8' }
+    if (req.method !== 'POST') { res.writeHead(405, json); return res.end('{"ok":false}') }
+    if (RESTART_KEY && url.searchParams.get('key') !== RESTART_KEY) {
+      res.writeHead(403, json)
+      return res.end('{"ok":false,"error":"key"}')
+    }
+    const ok = restartBot()
+    res.writeHead(ok ? 200 : 409, json)
+    return res.end(JSON.stringify({ ok }))
   }
 
   if (url.pathname === '/api/events') {
@@ -199,6 +260,7 @@ function shutdown() {
   if (stopping) return
   stopping = true
   if (reconnectTimer) clearTimeout(reconnectTimer)
+  if (restartTimer) clearTimeout(restartTimer)
   try { if (bot) bot.end() } catch (_) {}
   for (const res of clients) {
     try { res.end() } catch (_) {}
