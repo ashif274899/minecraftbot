@@ -25,6 +25,7 @@ let stopping = false
 let manualStop = false // true = bot website/schedule se stop kiya gaya hai
 let schedule = { enabled: false, slots: [] } // slots: [{ join: 'HH:MM', leave: 'HH:MM' }]
 let lastDesired = null // schedule ne pichli baar kya chaha tha (true = bot online)
+let stopActivity = null // bot ki random movement/look loop band karne ka function
 const clients = new Set()
 const logs = []
 
@@ -175,6 +176,7 @@ function scheduleReconnect() {
 
 function killBot() {
   botId++ // purane bot ke saare events ab ignore honge
+  if (stopActivity) { stopActivity(); stopActivity = null } // movement/look loop band
   if (connectWatchdog) { clearTimeout(connectWatchdog); connectWatchdog = null }
   if (!bot) return
   const old = bot
@@ -271,6 +273,75 @@ function connectBot() {
   })
 }
 
+// Bot kabhi khada nahi rahega: random move + hamesa nearest player ko dekhega
+function startActivity(b, alive) {
+  const CONTROLS = ['forward', 'back', 'left', 'right', 'jump', 'sprint', 'sneak']
+  const OPPOSITE = { forward: 'back', back: 'forward', left: 'right', right: 'left' }
+  const DIRS = ['forward', 'back', 'left', 'right']
+  const clearControls = () => {
+    for (const c of CONTROLS) { try { b.setControlState(c, false) } catch (_) {} }
+  }
+  let moveTimer = null
+  let lookTimer = null
+  let lastPos = b.entity ? b.entity.position.clone() : null
+  let stopped = false
+
+  const stop = () => {
+    if (stopped) return
+    stopped = true
+    if (moveTimer) clearTimeout(moveTimer)
+    if (lookTimer) clearInterval(lookTimer)
+    clearControls()
+  }
+  const dead = () => stopped || !alive() || bot !== b || !b.entity
+
+  // 1) Nearest player ki taraf dekhna (har 150ms)
+  lookTimer = setInterval(() => {
+    if (dead()) return stop()
+    try {
+      const target = b.nearestEntity(e => e.type === 'player' && e.username !== b.username)
+      if (target && b.entity.position.distanceTo(target.position) < 48) {
+        b.lookAt(target.position.offset(0, 1.62, 0), true).catch(() => {})
+      } else if (Math.random() < 0.08) {
+        // koi player paas nahi: idhar-udhar random dekho
+        b.look(Math.random() * Math.PI * 2, (Math.random() - 0.5) * 0.6, true).catch(() => {})
+      }
+    } catch (_) {}
+  }, 150)
+
+  // 2) Random movement, har 0.8s - 3s me nayi direction
+  const randomMove = () => {
+    if (dead()) return stop()
+    try {
+      clearControls()
+
+      // Agar atak gaya (pichle step me bahut kam hila) to peeche/side hat ke kood
+      const stuck = !!lastPos && b.entity.position.distanceTo(lastPos) < 0.3
+      lastPos = b.entity.position.clone()
+
+      const first = stuck
+        ? ['back', 'left', 'right'][Math.floor(Math.random() * 3)]
+        : DIRS[Math.floor(Math.random() * 4)]
+      b.setControlState(first, true)
+
+      // kabhi kabhi 2 direction combine (diagonal chalna)
+      if (Math.random() < 0.4) {
+        const second = DIRS[Math.floor(Math.random() * 4)]
+        if (second !== OPPOSITE[first]) b.setControlState(second, true)
+      }
+
+      if (stuck || Math.random() < 0.45) b.setControlState('jump', true)
+      if (Math.random() < 0.5) b.setControlState('sprint', true)
+      if (Math.random() < 0.2) b.swingArm('right')
+    } catch (_) {}
+
+    moveTimer = setTimeout(randomMove, 800 + Math.random() * 2200)
+  }
+  randomMove()
+
+  stopActivity = stop
+}
+
 function startBot(alive) {
   setState('connecting', `Connecting to ${HOST}:${MC_PORT}...`)
   addLog('info', `Connecting to Minecraft server ${HOST}:${MC_PORT}`)
@@ -304,6 +375,7 @@ function startBot(alive) {
       addLog('success', `Bot joined Minecraft as ${b.username}`)
       try { b.chat(`Hello! Main ${b.username} hoon 😎`) } catch (_) {}
       updatePlayers()
+      startActivity(b, alive) // random movement + nearest player ko dekhna
     })
 
     b.on('playerJoined', () => { if (alive()) updatePlayers() })
@@ -319,6 +391,7 @@ function startBot(alive) {
 
     b.on('kicked', reason => {
       if (!alive()) return
+      if (stopActivity) { stopActivity(); stopActivity = null }
       const text = typeof reason === 'string' ? reason : JSON.stringify(reason)
       setState('offline', 'Bot was kicked from Minecraft', {
         lastDisconnected: new Date().toISOString(),
@@ -329,6 +402,7 @@ function startBot(alive) {
 
     b.on('end', reason => {
       if (!alive()) return
+      if (stopActivity) { stopActivity(); stopActivity = null }
       if (connectWatchdog) { clearTimeout(connectWatchdog); connectWatchdog = null }
       const text = reason ? String(reason) : 'Connection ended'
       setState('offline', 'Minecraft connection ended', {
@@ -471,6 +545,7 @@ function shutdown() {
   if (reconnectTimer) clearTimeout(reconnectTimer)
   if (restartTimer) clearTimeout(restartTimer)
   if (connectWatchdog) clearTimeout(connectWatchdog)
+  if (stopActivity) { stopActivity(); stopActivity = null }
   try { if (bot) bot.end() } catch (_) {}
   for (const res of clients) {
     try { res.end() } catch (_) {}
