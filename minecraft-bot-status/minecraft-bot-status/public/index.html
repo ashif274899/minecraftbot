@@ -9,6 +9,7 @@
 :root{color-scheme:dark;--bg:#121212;--card:#181818;--hover:#2a2a2a;--muted:#b3b3b3;--dim:#727272;--green:#1ed760;--red:#f3727f;--yellow:#ffa42b;--blue:#509bf5;--accent:var(--yellow)}
 *{box-sizing:border-box}
 body.online{--accent:var(--green)}body.offline,body.error{--accent:var(--red)}
+body.stopped{--accent:#727272}
 html,body{height:100%}
 body{margin:0;font-family:Figtree,system-ui,sans-serif;color:#fff;background:#000;display:grid;grid-template-columns:260px 1fr;grid-template-rows:1fr 88px;grid-template-areas:"side main" "player player";gap:8px;padding:8px;overflow:hidden}
 button{font-family:inherit;color:inherit}
@@ -21,10 +22,11 @@ button{font-family:inherit;color:inherit}
 .logo svg{width:34px;height:34px;border-radius:6px}
 .nav a{display:flex;align-items:center;gap:16px;padding:11px 14px;color:var(--muted);font-weight:700;cursor:pointer}
 .nav a:hover{color:#fff}
-.lib{flex:1;padding:16px 10px}
+.lib{flex:1;padding:16px 10px;overflow:auto}
 .lib h3{margin:0 6px 12px;color:var(--muted);font-size:15px}
 .item{display:flex;align-items:center;gap:12px;padding:8px;border-radius:6px;cursor:pointer;border:0;background:none;width:100%;text-align:left}
 .item:hover{background:var(--hover)}
+.item[hidden]{display:none}
 .item .art{width:44px;height:44px;border-radius:5px;display:grid;place-items:center;background:#282828}
 .item b{display:block;font-size:15px}.item span{font-size:13px;color:var(--muted)}
 .item.red .art{color:var(--red)}
@@ -54,6 +56,10 @@ h1{margin:6px 0 14px;font-size:clamp(34px,7vw,84px);line-height:1;font-weight:90
 .rbtn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--red);background:#f3727f1f;color:var(--red);font-weight:800;font-size:14px;padding:10px 18px;border-radius:999px;cursor:pointer}
 .rbtn:hover{background:var(--red);color:#000}.rbtn:disabled{opacity:.5;cursor:wait}
 .rbtn .i{width:18px;height:18px}
+.sbtn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--green);background:#1ed7601f;color:var(--green);font-weight:800;font-size:14px;padding:10px 18px;border-radius:999px;cursor:pointer}
+.sbtn:hover{background:var(--green);color:#000}.sbtn:disabled{opacity:.5;cursor:wait}
+.sbtn .i{width:18px;height:18px}
+.rbtn[hidden],.sbtn[hidden]{display:none}
 
 .sec{padding:0 26px 26px}.sec>h2{margin:0 0 14px;font-size:24px;font-weight:800;letter-spacing:-.02em}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px}
@@ -69,11 +75,26 @@ h1{margin:6px 0 14px;font-size:clamp(34px,7vw,84px);line-height:1;font-weight:90
 .health{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
 .timeline{display:flex;gap:3px;height:56px;align-items:flex-end;margin:12px 0 8px}
 .timeline i{flex:1;min-width:3px;border-radius:2px;height:100%;background:var(--green)}
-.timeline i.offline,.timeline i.error{background:var(--red);height:45%}.timeline i.connecting,.timeline i.starting{background:var(--yellow);height:70%}
+.timeline i.offline,.timeline i.error{background:var(--red);height:45%}.timeline i.stopped{background:#727272;height:30%}.timeline i.connecting,.timeline i.starting{background:var(--yellow);height:70%}
 .counts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .counts div{background:#0e0e0e;border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:12px}
 .counts b{font-size:22px;font-weight:900;line-height:1;display:block}.counts span{font-size:12px;color:var(--muted);font-weight:600}
 .counts .success .i{color:var(--green)}.counts .info .i{color:var(--blue)}.counts .warn .i{color:var(--yellow)}.counts .error .i{color:var(--red)}
+
+/* Schedule */
+.sch-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.sw{display:inline-flex;align-items:center;gap:10px;font-weight:800;font-size:15px;cursor:pointer}
+.sw input{width:20px;height:20px;accent-color:var(--green);cursor:pointer}
+.sch-next{font-size:14px;font-weight:700;color:var(--green);margin:8px 0 2px}
+.sch-next.off{color:var(--muted)}
+.slot{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;background:var(--card);padding:12px 14px;border-radius:8px;margin-bottom:8px}
+.slot label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:700}
+.slot input{background:#0e0e0e;border:1px solid #333;color:#fff;border-radius:6px;padding:8px 10px;font:700 15px Figtree,sans-serif;color-scheme:dark}
+.slot .ib .i{width:24px;height:24px}.slot .ib:hover{color:var(--red)}
+.sch-act{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.gbtn{border:1px solid #ffffff44;background:none;color:#fff;font-weight:800;font-size:14px;padding:10px 18px;border-radius:999px;cursor:pointer}
+.gbtn:hover{background:#ffffff1a}
+
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
 .chip{border:0;border-radius:999px;padding:7px 14px;background:#ffffff1a;font-size:13px;font-weight:600;cursor:pointer}
 .chip.on{background:#fff;color:#000}
@@ -182,6 +203,9 @@ h1{margin:6px 0 14px;font-size:clamp(34px,7vw,84px);line-height:1;font-weight:90
 <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></symbol>
 <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/></symbol>
 <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 3v9M6.3 6.8a8 8 0 1 0 11.4 0"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></symbol>
+<symbol id="i-stop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></symbol>
 <symbol id="p-grass" viewBox="0 0 8 8"><rect width="8" height="8" fill="#866043"/><rect width="8" height="2" fill="#5fae3a"/><path fill="#5fae3a" d="M0 2h1v1H0zM3 2h2v1H3zM6 2h1v1H6z"/><path fill="#6f4e37" d="M1 4h1v1H1zM5 3h1v1H5zM3 5h1v1H3zM6 6h1v1H6zM1 7h1v1H1z"/></symbol>
 <symbol id="p-creeper" viewBox="0 0 8 8"><rect width="8" height="8" fill="#4cb034"/><path fill="#2e7d22" d="M0 0h1v1H0zM3 0h2v1H3zM7 1h1v1H7zM0 5h1v1H0zM7 6h1v1H7zM4 7h2v1H4z"/><path fill="#0b1a0b" d="M1 2h2v2H1zM5 2h2v2H5zM3 4h2v1H3zM2 5h4v2H2z"/><path fill="#4cb034" d="M3 6h2v1H3z"/></symbol>
 <symbol id="p-pick" viewBox="0 0 8 8"><path fill="#7a5230" d="M2 6h1v1H2zM3 5h1v1H3zM4 4h1v1H4zM5 3h1v1H5z"/><path fill="#4fe3d6" d="M1 1h4v1H1zM0 2h1v1H0zM5 2h1v1H5zM6 3h1v1H6zM1 0h3v1H1z"/><path fill="#2aa79c" d="M6 4h1v1H6zM5 2h1v1H5z"/></symbol>
@@ -194,6 +218,7 @@ h1{margin:6px 0 14px;font-size:clamp(34px,7vw,84px);line-height:1;font-weight:90
     <div class="logo"><svg class="px"><use href="#p-grass"/></svg>Sarifon Ki<br>Minecraft</div>
     <a data-go="top"><svg class="i"><use href="#i-home"/></svg>Home</a>
     <a data-go="health"><svg class="i"><use href="#i-pulse"/></svg>Server health</a>
+    <a data-go="schedule"><svg class="i"><use href="#i-cal"/></svg>Schedule</a>
     <a data-go="logs"><svg class="i"><use href="#i-search"/></svg>Search events</a>
   </nav>
   <div class="panel lib">
@@ -202,6 +227,8 @@ h1{margin:6px 0 14px;font-size:clamp(34px,7vw,84px);line-height:1;font-weight:90
     <button class="item" id="sExport"><div class="art"><svg class="i"><use href="#i-download"/></svg></div><div><b>Export logs</b><span id="sLogs">0 events</span></div></button>
     <button class="item" id="sBell"><div class="art"><svg class="i"><use href="#i-bell"/></svg></div><div><b>Alerts</b><span id="sBellT">Off</span></div></button>
     <button class="item red" id="sRestart"><div class="art"><svg class="i"><use href="#i-power"/></svg></div><div><b>Restart bot</b><span>Stop &amp; start again</span></div></button>
+    <button class="item red" id="sStop"><div class="art"><svg class="i"><use href="#i-stop"/></svg></div><div><b>Stop bot</b><span>Bot ko offline karo</span></div></button>
+    <button class="item" id="sStart" hidden><div class="art"><svg class="i"><use href="#i-play"/></svg></div><div><b>Start bot</b><span>Bot ko online karo</span></div></button>
   </div>
 </aside>
 
@@ -224,6 +251,8 @@ h1{margin:6px 0 14px;font-size:clamp(34px,7vw,84px);line-height:1;font-weight:90
     <button class="ib" id="copyBtn" title="Copy address" aria-label="Copy address"><svg class="i"><use href="#i-copy"/></svg></button>
     <button class="ib" id="exportBtn" title="Export logs" aria-label="Export logs"><svg class="i"><use href="#i-download"/></svg></button>
     <button class="rbtn" id="restart"><svg class="i"><use href="#i-power"/></svg>Restart bot</button>
+    <button class="rbtn" id="stopBtn"><svg class="i"><use href="#i-stop"/></svg>Stop bot</button>
+    <button class="sbtn" id="startBtn" hidden><svg class="i"><use href="#i-play"/></svg>Start bot</button>
   </div>
 
   <section class="sec">
@@ -248,6 +277,21 @@ h1{margin:6px 0 14px;font-size:clamp(34px,7vw,84px);line-height:1;font-weight:90
         <div class="warn"><svg class="i"><use href="#i-alert"/></svg><div><b id="cWarn">0</b><span>Warnings</span></div></div>
         <div class="error"><svg class="i"><use href="#i-x"/></svg><div><b id="cError">0</b><span>Errors</span></div></div>
       </div>
+    </div>
+  </section>
+
+  <section class="sec" id="schedule">
+    <h2>Schedule</h2>
+    <div class="sch-head">
+      <label class="sw"><input type="checkbox" id="schEnabled" />Schedule ON</label>
+      <span class="small" id="schTz">—</span>
+    </div>
+    <div class="sch-next off" id="schNext">Schedule off hai</div>
+    <div class="small" style="margin-bottom:12px">Bot Join time par Minecraft me aayega aur Leave time par nikal jayega. Raat wala slot bhi chalega (jaise 22:00 → 02:00).</div>
+    <div id="slots"></div>
+    <div class="sch-act">
+      <button class="gbtn" id="addSlot">+ Add slot</button>
+      <button class="sbtn" id="saveSch">Save schedule</button>
     </div>
   </section>
 
@@ -287,11 +331,12 @@ h1{margin:6px 0 14px;font-size:clamp(34px,7vw,84px);line-height:1;font-weight:90
 <script>
 const $=id=>document.getElementById(id)
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))
-const niceStatus=s=>({online:'Online',connecting:'Connecting…',starting:'Starting…',offline:'Offline',error:'Error'})[s]||s||'Unknown'
+const niceStatus=s=>({online:'Online',connecting:'Connecting…',starting:'Starting…',offline:'Offline',error:'Error',stopped:'Stopped'})[s]||s||'Unknown'
 const lvIcon={success:'check',error:'x',warn:'alert',info:'info'}
 const ic=n=>`<svg class="i"><use href="#i-${n}"/></svg>`
 const tm=iso=>iso?new Date(iso).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—'
 let last=null,filter='all',query='',onlineSince=null,prev=null,hist=[],alerts=false,skinUser=null
+let draft={enabled:false,slots:[]},dirty=false
 
 function toast(m){const e=$('toast');e.textContent=m;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),2500)}
 function fmt(ms){const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h}h ${m}m ${s%60}s`:m?`${m}m ${s%60}s`:`${s}s`}
@@ -325,9 +370,36 @@ function renderPlayers(d){
   $('playerNames').textContent=on?(n?names.slice(0,6).join(', ')+(names.length>6?' +'+(names.length-6):''):'Koi player online nahi'):'Bot offline'
 }
 
+/* ---------- Schedule UI ---------- */
+function renderSlots(){
+  $('schEnabled').checked=draft.enabled
+  $('slots').innerHTML=draft.slots.length?draft.slots.map((s,i)=>`<div class="slot">
+    <label>Join<input type="time" data-i="${i}" data-k="join" value="${esc(s.join)}" /></label>
+    <label>Leave<input type="time" data-i="${i}" data-k="leave" value="${esc(s.leave)}" /></label>
+    <button class="ib" data-del="${i}" title="Remove slot" aria-label="Remove slot">${ic('x')}</button></div>`).join('')
+    :'<div class="empty" style="padding:18px">Koi slot nahi. "Add slot" dabao.</div>'
+}
+function inMinText(m){const h=Math.floor(m/60),mm=m%60;return h?`${h}h ${mm}m`:`${mm}m`}
+function renderSchedInfo(sc){
+  if(!sc)return
+  $('schTz').textContent=`Timezone: ${sc.tz} • Abhi: ${sc.now}`
+  const el=$('schNext'),n=sc.next
+  if(sc.enabled&&n){el.className='sch-next';el.textContent=`Next: bot ${n.type==='join'?'JOIN karega':'LEAVE karega'} ${n.time} baje (${inMinText(n.inMin)} me)`}
+  else{el.className='sch-next off';el.textContent='Schedule off hai'}
+}
+function syncSchedule(sc){
+  renderSchedInfo(sc)
+  if(!sc||dirty)return
+  draft={enabled:!!sc.enabled,slots:(sc.slots||[]).map(s=>({join:s.join,leave:s.leave}))}
+  renderSlots()
+}
+
 function render(d){
   last=d;const s=d.status||''
   document.body.className=s
+  const isStopped=s==='stopped'
+  ;['stopBtn','sStop'].forEach(id=>$(id).hidden=isStopped)
+  ;['startBtn','sStart'].forEach(id=>$(id).hidden=!isStopped)
   const name=d.serverName||'Sarifon Ki Minecraft'
   $('statusText').textContent=niceStatus(s);$('cStatus').textContent=niceStatus(s)
   $('message').textContent=d.message||'—'
@@ -337,7 +409,7 @@ function render(d){
   $('error').textContent=d.lastError||'None'
   $('updated').textContent=`Updated ${new Date().toLocaleTimeString()}`
   $('npSub').textContent=`${d.username||'Bot'} • ${niceStatus(s)}`
-  setSkin(d.username);renderPlayers(d)
+  setSkin(d.username);renderPlayers(d);syncSchedule(d.schedule)
   if(s!==prev){
     if(prev!==null){toast(`Bot is ${niceStatus(s).replace('…','').toLowerCase()}`)
       if(alerts&&'Notification'in window&&Notification.permission==='granted')new Notification(name,{body:`Bot status: ${niceStatus(s)}`})}
@@ -381,12 +453,46 @@ async function restartBot(){
   }catch{toast('Server tak nahi pahuncha')}
   setTimeout(()=>{b.disabled=false},4000)
 }
+async function botAction(action){
+  const msgs={stop:'Bot stop ho gaya',start:'Bot start ho raha hai…'}
+  if(action==='stop'&&!confirm('Bot ko poora stop karna hai? Jab tak Start nahi dabaoge tab tak offline rahega.'))return
+  const btns=['stopBtn','sStop','startBtn','sStart'].map($);btns.forEach(b=>b.disabled=true)
+  try{
+    let r=await fetch('/api/'+action,{method:'POST'})
+    if(r.status===403){const k=prompt('Key daalo');if(!k){btns.forEach(b=>b.disabled=false);return}r=await fetch('/api/'+action+'?key='+encodeURIComponent(k),{method:'POST'})}
+    toast(r.ok?msgs[action]:(r.status===403?'Galat key':'Ye action abhi possible nahi'))
+  }catch{toast('Server tak nahi pahuncha')}
+  setTimeout(()=>btns.forEach(b=>b.disabled=false),2000)
+}
+async function saveSchedule(){
+  for(const s of draft.slots){
+    if(!s.join||!s.leave)return toast('Har slot me Join aur Leave time bharo')
+    if(s.join===s.leave)return toast('Join aur Leave time alag hone chahiye')
+  }
+  if(draft.enabled&&!draft.slots.length)return toast('Schedule ON karne ke liye pehle slot add karo')
+  const b=$('saveSch');b.disabled=true
+  const body=JSON.stringify(draft),opt={method:'POST',headers:{'Content-Type':'application/json'},body}
+  try{
+    let r=await fetch('/api/schedule',opt)
+    if(r.status===403){const k=prompt('Key daalo');if(!k){b.disabled=false;return}r=await fetch('/api/schedule?key='+encodeURIComponent(k),opt)}
+    if(r.ok){dirty=false;const j=await r.json();syncSchedule(j.schedule);toast('Schedule save ho gaya')}
+    else toast(r.status===403?'Galat key':'Schedule save nahi hua')
+  }catch{toast('Server tak nahi pahuncha')}
+  setTimeout(()=>{b.disabled=false},1000)
+}
 
 $('refresh').onclick=$('pRefresh').onclick=refresh
 $('copyBtn').onclick=$('pCopy').onclick=$('cardCopy').onclick=$('sCopy').onclick=copyAddr
 $('exportBtn').onclick=$('sExport').onclick=exportLogs
 $('bell').onclick=$('sBell').onclick=toggleAlerts
 $('restart').onclick=$('sRestart').onclick=restartBot
+$('stopBtn').onclick=$('sStop').onclick=()=>botAction('stop')
+$('startBtn').onclick=$('sStart').onclick=()=>botAction('start')
+$('schEnabled').onchange=e=>{draft.enabled=e.target.checked;dirty=true}
+$('addSlot').onclick=()=>{if(draft.slots.length>=12)return toast('Max 12 slots');draft.slots.push({join:'18:00',leave:'23:00'});dirty=true;renderSlots()}
+$('slots').oninput=e=>{const t=e.target;if(t.dataset.k){draft.slots[t.dataset.i][t.dataset.k]=t.value;dirty=true}}
+$('slots').onclick=e=>{const b=e.target.closest('[data-del]');if(b){draft.slots.splice(Number(b.dataset.del),1);dirty=true;renderSlots()}}
+$('saveSch').onclick=saveSchedule
 document.querySelectorAll('[data-go]').forEach(a=>a.onclick=()=>{a.dataset.go==='top'?$('main').scrollTo({top:0,behavior:'smooth'}):$(a.dataset.go).scrollIntoView({behavior:'smooth'})})
 document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));b.classList.add('on');filter=b.dataset.f;renderLogs()})
 $('q').oninput=e=>{query=e.target.value.trim().toLowerCase();renderLogs()}
