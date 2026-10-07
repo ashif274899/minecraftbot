@@ -14,13 +14,26 @@ const RESTART_KEY = process.env.RESTART_KEY || '' // optional: set karoge to res
 const SCHEDULE_TZ = process.env.SCHEDULE_TZ || 'Asia/Kolkata' // schedule is timezone me chalega
 const SCHEDULE_FILE = path.join(__dirname, 'schedule.json')
 const MAX_LOGS = 200
-const RECONNECT_MS = 5000
+
+// ---------- Reconnect settings ----------
+const RECONNECT_MIN_MS = 5000   // pehla retry 5s me
+const RECONNECT_MAX_MS = 60000  // retry delay 60s se zyada nahi badhega
+// "client timed out" fix: mineflayer ka default 30s hai, ise 2 minute kar diya
+const KEEPALIVE_TIMEOUT_MS = Number(process.env.KEEPALIVE_TIMEOUT_MS || 120000)
+
+// ---------- Movement settings (kam movement) ----------
+const MOVE_EVERY_MIN_MS = 20000 // har 20s - 45s me ek chhota sa step
+const MOVE_EVERY_MAX_MS = 45000
+const MOVE_HOLD_MIN_MS = 300    // step sirf 0.3s - 0.7s ka
+const MOVE_HOLD_MAX_MS = 700
+const LOOK_EVERY_MS = 3000      // nearest player ko har 3s me dekhega
 
 let bot = null
 let botId = 0
 let connectWatchdog = null
 let reconnectTimer = null
 let restartTimer = null
+let reconnectAttempts = 0
 let stopping = false
 let manualStop = false // true = bot website/schedule se stop kiya gaya hai
 let schedule = { enabled: false, slots: [] } // slots: [{ join: 'HH:MM', leave: 'HH:MM' }]
@@ -166,12 +179,17 @@ function updatePlayers() {
 setInterval(updatePlayers, 5000)
 setInterval(() => { evaluateSchedule(); broadcast() }, 20000) // schedule check + "next event" refresh
 
+// Reconnect delay dheere dheere badhta hai (5s, 10s, 20s ... max 60s) taaki
+// server "Connection throttled" na de aur 24/7 retry chalta rahe
 function scheduleReconnect() {
   if (stopping || manualStop || reconnectTimer || restartTimer) return
+  const delay = Math.min(RECONNECT_MIN_MS * Math.pow(2, reconnectAttempts), RECONNECT_MAX_MS)
+  reconnectAttempts++
+  addLog('info', `Reconnect ${Math.round(delay / 1000)}s me`, `Attempt #${reconnectAttempts}`)
   reconnectTimer = setTimeout(() => {
     reconnectTimer = null
     connectBot()
-  }, RECONNECT_MS)
+  }, delay)
 }
 
 function killBot() {
@@ -190,6 +208,7 @@ function restartBot() {
   if (stopping || restartTimer) return false
   if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null }
   manualStop = false
+  reconnectAttempts = 0
   killBot()
   setState('starting', 'Restarting bot...', {
     lastConnected: null,
@@ -230,6 +249,7 @@ function stopBotManual(reason = 'Bot stopped from website') {
 function startBotManual() {
   if (stopping || !manualStop) return false
   manualStop = false
+  reconnectAttempts = 0
   addLog('info', 'Start requested', 'Bot dobara connect ho raha hai')
   connectBot()
   return true
@@ -264,7 +284,7 @@ function connectBot() {
         lastDisconnected: new Date().toISOString(),
         lastError: `Port check failed: ${result}`
       })
-      addLog('warn', 'Server port not reachable from this host', `Result: ${result}. Retrying in ${RECONNECT_MS / 1000}s`)
+      addLog('warn', 'Server port not reachable from this host', `Result: ${result}`)
       scheduleReconnect()
       return
     }
@@ -273,71 +293,56 @@ function connectBot() {
   })
 }
 
-// Bot kabhi khada nahi rahega: random move + hamesa nearest player ko dekhega
+// Halki activity: kabhi kabhi ek chhota step + nearest player ki taraf dekhna
 function startActivity(b, alive) {
-  const CONTROLS = ['forward', 'back', 'left', 'right', 'jump', 'sprint', 'sneak']
-  const OPPOSITE = { forward: 'back', back: 'forward', left: 'right', right: 'left' }
   const DIRS = ['forward', 'back', 'left', 'right']
-  const clearControls = () => {
-    for (const c of CONTROLS) { try { b.setControlState(c, false) } catch (_) {} }
-  }
+  const rand = (min, max) => min + Math.random() * (max - min)
   let moveTimer = null
+  let holdTimer = null
   let lookTimer = null
-  let lastPos = b.entity ? b.entity.position.clone() : null
   let stopped = false
+
+  const clearControls = () => {
+    for (const c of ['forward', 'back', 'left', 'right', 'jump', 'sprint', 'sneak']) {
+      try { b.setControlState(c, false) } catch (_) {}
+    }
+  }
 
   const stop = () => {
     if (stopped) return
     stopped = true
     if (moveTimer) clearTimeout(moveTimer)
+    if (holdTimer) clearTimeout(holdTimer)
     if (lookTimer) clearInterval(lookTimer)
     clearControls()
   }
   const dead = () => stopped || !alive() || bot !== b || !b.entity
 
-  // 1) Nearest player ki taraf dekhna (har 150ms)
+  // 1) Nearest player ki taraf dekhna (har 3s) - anti-AFK ke liye kaafi hai
   lookTimer = setInterval(() => {
     if (dead()) return stop()
     try {
       const target = b.nearestEntity(e => e.type === 'player' && e.username !== b.username)
-      if (target && b.entity.position.distanceTo(target.position) < 48) {
-        b.lookAt(target.position.offset(0, 1.62, 0), true).catch(() => {})
-      } else if (Math.random() < 0.08) {
-        // koi player paas nahi: idhar-udhar random dekho
-        b.look(Math.random() * Math.PI * 2, (Math.random() - 0.5) * 0.6, true).catch(() => {})
+      if (target && b.entity.position.distanceTo(target.position) < 32) {
+        b.lookAt(target.position.offset(0, 1.62, 0), false).catch(() => {})
+      } else if (Math.random() < 0.3) {
+        b.look(b.entity.yaw + (Math.random() - 0.5), (Math.random() - 0.5) * 0.4, false).catch(() => {})
       }
     } catch (_) {}
-  }, 150)
+  }, LOOK_EVERY_MS)
 
-  // 2) Random movement, har 0.8s - 3s me nayi direction
-  const randomMove = () => {
+  // 2) Har 20-45s me sirf ek chhota step (0.3-0.7s), sprint nahi
+  const smallMove = () => {
     if (dead()) return stop()
     try {
-      clearControls()
-
-      // Agar atak gaya (pichle step me bahut kam hila) to peeche/side hat ke kood
-      const stuck = !!lastPos && b.entity.position.distanceTo(lastPos) < 0.3
-      lastPos = b.entity.position.clone()
-
-      const first = stuck
-        ? ['back', 'left', 'right'][Math.floor(Math.random() * 3)]
-        : DIRS[Math.floor(Math.random() * 4)]
-      b.setControlState(first, true)
-
-      // kabhi kabhi 2 direction combine (diagonal chalna)
-      if (Math.random() < 0.4) {
-        const second = DIRS[Math.floor(Math.random() * 4)]
-        if (second !== OPPOSITE[first]) b.setControlState(second, true)
-      }
-
-      if (stuck || Math.random() < 0.45) b.setControlState('jump', true)
-      if (Math.random() < 0.5) b.setControlState('sprint', true)
-      if (Math.random() < 0.2) b.swingArm('right')
+      const dir = DIRS[Math.floor(Math.random() * DIRS.length)]
+      b.setControlState(dir, true)
+      if (Math.random() < 0.25) b.setControlState('jump', true)
+      holdTimer = setTimeout(() => { if (!dead()) clearControls() }, rand(MOVE_HOLD_MIN_MS, MOVE_HOLD_MAX_MS))
     } catch (_) {}
-
-    moveTimer = setTimeout(randomMove, 800 + Math.random() * 2200)
+    moveTimer = setTimeout(smallMove, rand(MOVE_EVERY_MIN_MS, MOVE_EVERY_MAX_MS))
   }
-  randomMove()
+  moveTimer = setTimeout(smallMove, rand(5000, 10000))
 
   stopActivity = stop
 }
@@ -352,7 +357,8 @@ function startBot(alive) {
       port: MC_PORT,
       username: USERNAME,
       version: VERSION,
-      auth: AUTH
+      auth: AUTH,
+      checkTimeoutInterval: KEEPALIVE_TIMEOUT_MS // "client timed out after 30000ms" fix
     })
     bot = b
 
@@ -368,6 +374,7 @@ function startBot(alive) {
     b.once('spawn', () => {
       if (!alive()) return
       if (connectWatchdog) { clearTimeout(connectWatchdog); connectWatchdog = null }
+      reconnectAttempts = 0 // join ho gaya, backoff reset
       setState('online', 'Bot is inside Minecraft', {
         lastConnected: new Date().toISOString(),
         lastError: null
@@ -375,11 +382,18 @@ function startBot(alive) {
       addLog('success', `Bot joined Minecraft as ${b.username}`)
       try { b.chat(`Hello! Main ${b.username} hoon 😎`) } catch (_) {}
       updatePlayers()
-      startActivity(b, alive) // random movement + nearest player ko dekhna
+      startActivity(b, alive)
     })
 
     b.on('playerJoined', () => { if (alive()) updatePlayers() })
     b.on('playerLeft', () => { if (alive()) updatePlayers() })
+
+    // Death ke baad khud respawn
+    b.on('death', () => {
+      if (!alive()) return
+      addLog('warn', 'Bot mar gaya, respawn ho raha hai')
+      setTimeout(() => { try { if (alive() && bot === b) b.respawn() } catch (_) {} }, 2000)
+    })
 
     b.on('chat', (username, message) => {
       if (!alive() || username === b.username) return
@@ -398,6 +412,7 @@ function startBot(alive) {
         lastError: text
       })
       addLog('warn', 'Bot kicked from Minecraft', text)
+      // reconnect 'end' event se hoga
     })
 
     b.on('end', reason => {
@@ -413,9 +428,16 @@ function startBot(alive) {
       scheduleReconnect()
     })
 
+    // FIX: pehle har error par bot ko kill karke reconnect hota tha, isliye bot
+    // khud leave kar deta tha. Ab agar bot online hai to sirf log hoga; asli
+    // disconnect hone par 'end' event reconnect karega.
     b.on('error', error => {
       if (!alive()) return
       const text = error && error.message ? error.message : String(error)
+      if (state.status === 'online') {
+        addLog('warn', 'Mineflayer error (bot online hi hai)', text)
+        return
+      }
       setState('error', 'Minecraft bot error', { lastError: text })
       addLog('error', 'Mineflayer error', text)
       scheduleReconnect()
@@ -530,10 +552,14 @@ server.listen(PORT, '0.0.0.0', () => {
 process.on('SIGTERM', shutdown)
 process.on('SIGINT', shutdown)
 
+// FIX: pehle koi bhi stray exception aane par online bot bhi kill ho jata tha.
+// Ab sirf tab restart hota hai jab bot online nahi hai.
 process.on('uncaughtException', err => {
   addLog('error', 'Uncaught exception', err && err.stack ? err.stack : err)
-  killBot()
-  scheduleReconnect()
+  if (state.status !== 'online') {
+    killBot()
+    scheduleReconnect()
+  }
 })
 process.on('unhandledRejection', err => {
   addLog('error', 'Unhandled rejection', err && err.message ? err.message : err)
