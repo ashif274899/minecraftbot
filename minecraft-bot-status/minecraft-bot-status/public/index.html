@@ -144,6 +144,82 @@ h1{margin:6px 0 14px;font-size:clamp(34px,7vw,84px);line-height:1;font-weight:90
 .mc-btn{margin-top:22px;width:100%;padding:16px;font:12px "Press Start 2P",monospace;color:#fff;text-shadow:2px 2px #3f3f3f;background:#7d7d7d;border:3px solid;border-color:#bdbdbd #3a3a3a #3a3a3a #bdbdbd;outline:3px solid #000;cursor:pointer}
 .mc-btn:hover,.mc-btn:active{background:#5d8f3a;border-color:#9bd36b #2d4a1a #2d4a1a #9bd36b}
 
+/* ---- Professional polish ---- */
+:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.panel{border:1px solid #ffffff0f}
+.card{border:1px solid #ffffff0d;transition:background .2s,transform .2s,border-color .2s}
+.card:hover{transform:translateY(-3px);border-color:#ffffff22}
+.sec>h2{display:flex;align-items:center;gap:12px}
+.sec>h2::before{content:"";width:6px;height:24px;border-radius:2px;background:var(--accent);flex:none}
+.nav a{border-radius:8px;transition:background .15s,color .15s}
+.nav a:hover{background:#ffffff0f}
+.row{border:1px solid transparent}.row:hover{border-color:#ffffff14}
+.bigplay{box-shadow:0 6px 20px color-mix(in srgb,var(--green) 40%,transparent)}
+.cover{outline:1px solid #ffffff1f;outline-offset:-1px}
+
+/* ---- Leaderboard ---- */
+.lb-label{margin:22px 0 12px;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.02em}
+.lb-label:first-of-type{margin-top:0}
+.ava{position:relative;flex:none;border-radius:8px;overflow:hidden;background:#282828;image-rendering:pixelated}
+.ava img{display:block;width:100%;height:100%;image-rendering:pixelated}
+.chipx{display:inline-flex;align-items:center;gap:6px;font:9px/1 "Press Start 2P",monospace;padding:7px 9px;border-radius:4px;color:#000}
+
+/* Owner */
+.owner{position:relative;display:flex;align-items:center;gap:20px;padding:22px 24px;border-radius:12px;overflow:hidden;
+  background:linear-gradient(110deg,#3a2c0a,#1c1a12 55%,#181818);border:1px solid #ffd54a55;box-shadow:0 0 0 1px #000,0 10px 40px #ffd54a1a}
+.owner::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,#ffe9a533 50%,transparent 60%);transform:translateX(-120%);animation:shine 5s ease-in-out infinite}
+@keyframes shine{40%,100%{transform:translateX(120%)}}
+.owner .ava{width:84px;height:84px;border:3px solid #ffd54a;box-shadow:0 0 0 3px #000,0 0 24px #ffd54a55}
+.owner .crown{position:absolute;left:62px;top:10px;width:34px;height:34px;filter:drop-shadow(0 3px 0 #000);animation:bob 3s ease-in-out infinite;z-index:2}
+.owner h3{margin:8px 0 0;font-size:clamp(22px,4vw,32px);font-weight:900;letter-spacing:-.03em;color:#ffe08a}
+.owner .chipx{background:#ffd54a}
+.owner p{margin:8px 0 0;font-size:13px;color:#cdbd8a;font-weight:600}
+
+/* Podium */
+.podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:14px;align-items:end}
+.pod{position:relative;text-align:center;padding:20px 14px 0;border-radius:12px 12px 0 0;background:var(--card);border:1px solid #ffffff12;border-bottom:0;overflow:hidden}
+.pod .ava{width:72px;height:72px;margin:0 auto 12px;border:3px solid var(--mc);box-shadow:0 0 0 3px #000}
+.pod b{display:block;font-size:17px;font-weight:800;word-break:break-word}
+.pod span.t{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-top:2px}
+.pod .step{margin:16px -14px 0;height:var(--h);display:grid;place-items:center;font:20px "Press Start 2P",monospace;color:#000;text-shadow:2px 2px 0 #fff4;
+  background:
+    linear-gradient(#fff3,#fff0 40%,#0003) ,
+    repeating-linear-gradient(90deg,transparent 0 31px,#0002 31px 32px),
+    repeating-linear-gradient(0deg,transparent 0 31px,#0002 31px 32px),var(--mc);
+  border-top:3px solid #fff5}
+.pod.p1{--mc:#ffd54a;--h:104px;background:linear-gradient(#2a2410,var(--card))}
+.pod.p2{--mc:#d4dbe3;--h:78px}
+.pod.p3{--mc:#d98a52;--h:58px}
+.pod.p1 .ava{width:88px;height:88px;box-shadow:0 0 0 3px #000,0 0 26px #ffd54a66}
+.pod .crown{position:absolute;top:8px;left:50%;width:28px;height:28px;transform:translateX(-50%);animation:bob 3s ease-in-out infinite}
+.pod.p1 .ava{margin-top:22px}
+
+/* Cutest player */
+.cutie{position:relative;display:flex;align-items:center;gap:22px;padding:24px;border-radius:22px;overflow:hidden;color:#6b2147;
+  background:radial-gradient(circle at 12% 20%,#fff0f7,transparent 45%),linear-gradient(135deg,#ffc2dc,#ffd9e8 55%,#ffe8c9);
+  border:2px dashed #ff8fbf;box-shadow:0 10px 36px #ff8fbf33}
+.cutie .ava{width:96px;height:96px;border-radius:50%;border:5px solid #fff;box-shadow:0 0 0 3px #ff8fbf,0 8px 20px #ff6fa955;animation:wob 3.5s ease-in-out infinite}
+@keyframes wob{50%{transform:rotate(-4deg) translateY(-4px)}}
+.cutie small{display:inline-block;font-size:12px;font-weight:800;background:#fff;color:#e0568f;padding:5px 12px;border-radius:999px}
+.cutie h3{margin:10px 0 4px;font-size:clamp(24px,4vw,34px);font-weight:900;letter-spacing:-.03em;color:#a3265f}
+.cutie p{margin:0;font-size:14px;font-weight:700}
+.cutie .hh{position:absolute;bottom:-14px;width:22px;height:22px;opacity:0;animation:rise 6s linear infinite}
+.cutie .hh:nth-of-type(1){left:50%}.cutie .hh:nth-of-type(2){left:64%;animation-delay:1.6s}
+.cutie .hh:nth-of-type(3){left:78%;animation-delay:3.1s}.cutie .hh:nth-of-type(4){left:91%;animation-delay:4.4s}
+@keyframes rise{10%{opacity:.9}100%{transform:translateY(-190px) rotate(18deg);opacity:0}}
+.cutie .ck{margin-left:auto;width:64px;height:64px;flex:none}
+
+@media(max-width:900px){
+  .owner{flex-direction:column;text-align:center;padding:24px 16px}.owner .crown{left:50%;margin-left:-17px;top:8px}
+  .owner .ava{margin-top:14px}
+  .podium{grid-template-columns:1fr;gap:10px}
+  .pod,.pod.p1{display:flex;align-items:center;gap:14px;text-align:left;padding:12px 14px;border-radius:12px;border-bottom:1px solid #ffffff12}
+  .pod .ava,.pod.p1 .ava{width:56px;height:56px;margin:0}.pod.p1 .ava{margin-top:0}.pod .crown{display:none}
+  .pod .step{order:3;margin:0 0 0 auto;height:44px;width:60px;font-size:13px;border-radius:6px;border-top:0}
+  .pod.p1{order:1}.pod.p2{order:2}.pod.p3{order:3}
+  .cutie{flex-direction:column;text-align:center;padding:24px 16px}.cutie .ck{display:none}
+}
+
 /* ===== PHONE DESIGN ===== */
 @media(max-width:900px){
   html,body{height:100dvh}
@@ -218,6 +294,7 @@ h1{margin:6px 0 14px;font-size:clamp(34px,7vw,84px);line-height:1;font-weight:90
     <div class="logo"><svg class="px"><use href="#p-grass"/></svg>Sarifon Ki<br>Minecraft</div>
     <a data-go="top"><svg class="i"><use href="#i-home"/></svg>Home</a>
     <a data-go="health"><svg class="i"><use href="#i-pulse"/></svg>Server health</a>
+    <a data-go="leaderboard"><svg class="i"><use href="#i-users"/></svg>Leaderboard</a>
     <a data-go="schedule"><svg class="i"><use href="#i-cal"/></svg>Schedule</a>
     <a data-go="logs"><svg class="i"><use href="#i-search"/></svg>Search events</a>
   </nav>
@@ -279,6 +356,51 @@ h1{margin:6px 0 14px;font-size:clamp(34px,7vw,84px);line-height:1;font-weight:90
       </div>
     </div>
   </section>
+
+  <section class="sec" id="leaderboard">
+  <h2>Leaderboard</h2>
+
+  <div class="lb-label">Ownership</div>
+  <div class="owner">
+    <svg class="px crown" viewBox="0 0 8 8"><path fill="#ffd54a" d="M0 2h1v4H0zM7 2h1v4H7zM3 1h2v5H3zM1 3h2v3H1zM5 3h2v3H5z"/><path fill="#b8860b" d="M0 6h8v1H0z"/><path fill="#e03131" d="M3 3h2v1H3z"/></svg>
+    <div class="ava"><img src="https://mc-heads.net/avatar/ashif_noway/168" alt="ashif_noway" onerror="this.style.display='none'"></div>
+    <div style="position:relative;z-index:1">
+      <span class="chipx">OWNER</span>
+      <h3>ashif_noway</h3>
+      <p>Sarifon Ki Minecraft ke malik &amp; founder</p>
+    </div>
+  </div>
+
+  <div class="lb-label">Top players</div>
+  <div class="podium">
+    <div class="pod p2">
+      <div class="ava"><img src="https://mc-heads.net/avatar/Operator/128" alt="Operator" onerror="this.style.display='none'"></div>
+      <div><b>Operator</b><span class="t">Iron rank</span></div><div class="step">#2</div>
+    </div>
+    <div class="pod p1">
+      <svg class="px crown" viewBox="0 0 8 8"><path fill="#ffd54a" d="M0 2h1v4H0zM7 2h1v4H7zM3 1h2v5H3zM1 3h2v3H1zM5 3h2v3H5z"/><path fill="#b8860b" d="M0 6h8v1H0z"/></svg>
+      <div class="ava"><img src="https://mc-heads.net/avatar/abhi17yt/168" alt="abhi17yt" onerror="this.style.display='none'"></div>
+      <div><b>abhi17yt</b><span class="t">Gold rank &bull; Champion</span></div><div class="step">#1</div>
+    </div>
+    <div class="pod p3">
+      <div class="ava"><img src="https://mc-heads.net/avatar/ashif_gamerhz7/128" alt="ashif_gamerhz7" onerror="this.style.display='none'"></div>
+      <div><b>ashif_gamerhz7</b><span class="t">Copper rank</span></div><div class="step">#3</div>
+    </div>
+  </div>
+
+  <div class="lb-label">Cutest player</div>
+  <div class="cutie">
+    <svg class="px hh" viewBox="0 0 8 8"><use href="#p-heart"/></svg><svg class="px hh" viewBox="0 0 8 8"><use href="#p-heart"/></svg>
+    <svg class="px hh" viewBox="0 0 8 8"><use href="#p-heart"/></svg><svg class="px hh" viewBox="0 0 8 8"><use href="#p-heart"/></svg>
+    <div class="ava"><img src="https://mc-heads.net/avatar/cookie39795/192" alt="cookie39795" onerror="this.style.display='none'"></div>
+    <div>
+      <small>Sabse cute player</small>
+      <h3>cookie39795</h3>
+      <p>Poore server ki cutie, sabka favourite</p>
+    </div>
+    <svg class="px ck" viewBox="0 0 8 8"><path fill="#c68642" d="M2 0h4v1h1v1h1v4H7v1H6v1H2V7H1V6H0V2h1V1h1z"/><path fill="#5a3418" d="M2 2h1v1H2zM5 1h1v1H5zM4 4h1v1H4zM2 5h1v1H2zM6 5h1v1H6z"/></svg>
+  </div>
+</section>
 
   <section class="sec" id="schedule">
     <h2>Schedule</h2>
