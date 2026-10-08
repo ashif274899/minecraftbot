@@ -8,7 +8,7 @@ const path = require('path')
 
 const PORT = Number(process.env.PORT || 10000)
 const RESTART_KEY = process.env.RESTART_KEY || ''   // dashboard se restart/stop/start/schedule ki key (optional)
-const BOT_TOKEN = process.env.895093849035857820970927 || ''       // PC bot aur website ke beech secret token (zaroor set karo)
+const BOT_TOKEN = process.env.BOT_TOKEN || '895093849035857820970927'       // PC bot aur website ke beech secret token (zaroor set karo)
 const PC_TIMEOUT_MS = 20000                         // itne time tak PC se push na aaye to "offline"
 
 if (!BOT_TOKEN) console.warn('WARNING: BOT_TOKEN set nahi hai - koi bhi fake state push kar sakta hai!')
