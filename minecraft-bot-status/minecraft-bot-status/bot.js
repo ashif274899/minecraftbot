@@ -1,32 +1,36 @@
-const http = require('http')
+// ================= PC BOT (tumhare computer par chalega) =================
+// Run: node bot.js
+// Ye bot Minecraft me khud join karta hai, aur apni state website ko push karta hai.
+// Website ke buttons (restart/stop/start/schedule) yahan commands ban ke aate hain.
 const fs = require('fs')
 const path = require('path')
 const net = require('net')
 const mineflayer = require('mineflayer')
 
-const PORT = Number(process.env.PORT || 10000)
+// ---------- Settings (env se ya yahan seedha likh do) ----------
+const WEBSITE_URL = (process.env.WEBSITE_URL || 'https://minecraftbot-aslr.onrender.com').replace(/\/+$/, '')
+const BOT_TOKEN = process.env.BOT_TOKEN || '895093849035857820970927'   // website ke BOT_TOKEN se same hona chahiye
 const HOST = process.env.MINECRAFT_HOST || 'sarifon-ki-minecraft.aternos.me'
 const MC_PORT = Number(process.env.MINECRAFT_PORT || 42934)
 const USERNAME = process.env.MINECRAFT_USERNAME || 'BotPlayer'
 const VERSION = process.env.MINECRAFT_VERSION || '26.2'
 const AUTH = process.env.MINECRAFT_AUTH || 'offline'
-const RESTART_KEY = process.env.RESTART_KEY || '' // optional: set karoge to restart/stop/start/schedule ke liye key maangega
-const SCHEDULE_TZ = process.env.SCHEDULE_TZ || 'Asia/Kolkata' // schedule is timezone me chalega
+const SCHEDULE_TZ = process.env.SCHEDULE_TZ || 'Asia/Kolkata'
 const SCHEDULE_FILE = path.join(__dirname, 'schedule.json')
 const MAX_LOGS = 200
 
-// ---------- Reconnect settings ----------
-const RECONNECT_MIN_MS = 5000   // pehla retry 5s me
-const RECONNECT_MAX_MS = 60000  // retry delay 60s se zyada nahi badhega
-// "client timed out" fix: mineflayer ka default 30s hai, ise 2 minute kar diya
+const RECONNECT_MIN_MS = 5000
+const RECONNECT_MAX_MS = 60000
 const KEEPALIVE_TIMEOUT_MS = Number(process.env.KEEPALIVE_TIMEOUT_MS || 120000)
 
-// ---------- Movement settings (kam movement) ----------
-const MOVE_EVERY_MIN_MS = 20000 // har 20s - 45s me ek chhota sa step
+const MOVE_EVERY_MIN_MS = 20000
 const MOVE_EVERY_MAX_MS = 45000
-const MOVE_HOLD_MIN_MS = 300    // step sirf 0.3s - 0.7s ka
+const MOVE_HOLD_MIN_MS = 300
 const MOVE_HOLD_MAX_MS = 700
-const LOOK_EVERY_MS = 3000      // nearest player ko har 3s me dekhega
+const LOOK_EVERY_MS = 3000
+
+if (typeof fetch !== 'function') { console.error('Node 18 ya naya version chahiye (node -v check karo)'); process.exit(1) }
+if (WEBSITE_URL.includes('YOUR-SITE')) { console.error('WEBSITE_URL set karo (apni Render website ka link)'); process.exit(1) }
 
 let bot = null
 let botId = 0
@@ -35,15 +39,14 @@ let reconnectTimer = null
 let restartTimer = null
 let reconnectAttempts = 0
 let stopping = false
-let manualStop = false // true = bot website/schedule se stop kiya gaya hai
-let schedule = { enabled: false, slots: [] } // slots: [{ join: 'HH:MM', leave: 'HH:MM' }]
-let lastDesired = null // schedule ne pichli baar kya chaha tha (true = bot online)
-let stopActivity = null // bot ki random movement/look loop band karne ka function
-const clients = new Set()
+let manualStop = false
+let schedule = { enabled: false, slots: [] }
+let lastDesired = null
+let stopActivity = null
 const logs = []
 
 const state = {
-  status: 'starting', // starting | connecting | online | offline | error | stopped
+  status: 'starting',
   message: 'Starting bot...',
   since: new Date().toISOString(),
   lastConnected: null,
@@ -58,12 +61,7 @@ const state = {
 }
 
 function addLog(level, message, details = null) {
-  const entry = {
-    time: new Date().toISOString(),
-    level,
-    message: String(message),
-    details: details ? String(details) : null
-  }
+  const entry = { time: new Date().toISOString(), level, message: String(message), details: details ? String(details) : null }
   logs.push(entry)
   if (logs.length > MAX_LOGS) logs.shift()
   console.log(`[${entry.level.toUpperCase()}] ${entry.message}${entry.details ? ` | ${entry.details}` : ''}`)
@@ -103,15 +101,12 @@ function saveSchedule() {
 }
 
 function nowParts() {
-  const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone: SCHEDULE_TZ, hour: '2-digit', minute: '2-digit', hour12: false
-  }).formatToParts(new Date())
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: SCHEDULE_TZ, hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date())
   const h = Number(parts.find(p => p.type === 'hour').value) % 24
   const m = Number(parts.find(p => p.type === 'minute').value)
   return { h, m, min: h * 60 + m, text: `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}` }
 }
 
-// Slot overnight bhi ho sakta hai (jaise 22:00 -> 02:00)
 function inWindow(min) {
   return schedule.slots.some(s => {
     const j = toMin(s.join), l = toMin(s.leave)
@@ -147,6 +142,16 @@ function evaluateSchedule(force = false) {
   }
 }
 
+function applySchedule(body) {
+  const slots = cleanSlots(body && body.slots)
+  schedule = { enabled: !!(body && body.enabled) && slots.length > 0, slots }
+  saveSchedule()
+  lastDesired = null
+  addLog('info', schedule.enabled ? 'Schedule saved (ON)' : 'Schedule saved (OFF)',
+    schedule.slots.map(s => `${s.join} -> ${s.leave}`).join(', ') || 'No slots')
+  evaluateSchedule(true)
+}
+
 function publicState() {
   return {
     ...state,
@@ -156,14 +161,64 @@ function publicState() {
   }
 }
 
+// ---------- Website ko state bhejna ----------
+let pushTimer = null
+let linkOk = null
 function broadcast() {
-  const payload = `data: ${JSON.stringify(publicState())}\n\n`
-  for (const res of clients) {
-    try { res.write(payload) } catch (_) { clients.delete(res) }
+  if (pushTimer) return
+  pushTimer = setTimeout(() => { pushTimer = null; pushState() }, 300)
+}
+
+function setLink(ok, why = '') {
+  if (ok === linkOk) return
+  linkOk = ok
+  console.log(ok ? '[LINK] Website se connection ban gaya' : `[LINK] Website tak nahi pahunch pa raha (${why}) - retry chalta rahega`)
+}
+
+async function pushState() {
+  try {
+    const r = await fetch(`${WEBSITE_URL}/api/bot/push`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-bot-token': BOT_TOKEN },
+      body: JSON.stringify(publicState()),
+      signal: AbortSignal.timeout(10000)
+    })
+    if (r.status === 403) return setLink(false, 'BOT_TOKEN galat hai')
+    setLink(r.ok, 'HTTP ' + r.status)
+  } catch (e) {
+    setLink(false, e.message)
   }
 }
 
-// Bot khud tab-list se players count karta hai (bot ko chhodkar)
+// Website ke buttons se aaye commands (har 2s me check)
+async function pollCommands() {
+  try {
+    const r = await fetch(`${WEBSITE_URL}/api/bot/commands`, {
+      headers: { 'x-bot-token': BOT_TOKEN },
+      signal: AbortSignal.timeout(10000)
+    })
+    if (r.ok) {
+      const j = await r.json()
+      for (const c of j.commands || []) runCommand(c)
+    }
+  } catch (_) {}
+  setTimeout(pollCommands, 2000)
+}
+
+function runCommand(c) {
+  try {
+    if (c.type === 'restart') restartBot()
+    else if (c.type === 'stop') stopBotManual()
+    else if (c.type === 'start') startBotManual()
+    else if (c.type === 'schedule') applySchedule(c.data)
+  } catch (e) {
+    addLog('error', 'Command fail hua: ' + c.type, e.message)
+  }
+}
+
+setInterval(pushState, 5000) // heartbeat: website ko pata rahe PC zinda hai
+
+// ---------- Bot logic ----------
 function updatePlayers() {
   let names = []
   if (bot && state.status === 'online' && bot.players) {
@@ -177,33 +232,27 @@ function updatePlayers() {
   broadcast()
 }
 setInterval(updatePlayers, 5000)
-setInterval(() => { evaluateSchedule(); broadcast() }, 20000) // schedule check + "next event" refresh
+setInterval(() => { evaluateSchedule(); broadcast() }, 20000)
 
-// Reconnect delay dheere dheere badhta hai (5s, 10s, 20s ... max 60s) taaki
-// server "Connection throttled" na de aur 24/7 retry chalta rahe
 function scheduleReconnect() {
   if (stopping || manualStop || reconnectTimer || restartTimer) return
   const delay = Math.min(RECONNECT_MIN_MS * Math.pow(2, reconnectAttempts), RECONNECT_MAX_MS)
   reconnectAttempts++
   addLog('info', `Reconnect ${Math.round(delay / 1000)}s me`, `Attempt #${reconnectAttempts}`)
-  reconnectTimer = setTimeout(() => {
-    reconnectTimer = null
-    connectBot()
-  }, delay)
+  reconnectTimer = setTimeout(() => { reconnectTimer = null; connectBot() }, delay)
 }
 
 function killBot() {
-  botId++ // purane bot ke saare events ab ignore honge
-  if (stopActivity) { stopActivity(); stopActivity = null } // movement/look loop band
+  botId++
+  if (stopActivity) { stopActivity(); stopActivity = null }
   if (connectWatchdog) { clearTimeout(connectWatchdog); connectWatchdog = null }
   if (!bot) return
   const old = bot
   bot = null
-  old.on('error', () => {}) // end() ke baad aane wale errors se crash na ho
+  old.on('error', () => {})
   try { old.end() } catch (_) {}
 }
 
-// Sab kuch stop karke bot ko fresh start karta hai
 function restartBot() {
   if (stopping || restartTimer) return false
   if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null }
@@ -211,22 +260,14 @@ function restartBot() {
   reconnectAttempts = 0
   killBot()
   setState('starting', 'Restarting bot...', {
-    lastConnected: null,
-    lastDisconnected: new Date().toISOString(),
-    lastError: null,
-    players: 0,
-    playerNames: [],
-    maxPlayers: null
+    lastConnected: null, lastDisconnected: new Date().toISOString(), lastError: null,
+    players: 0, playerNames: [], maxPlayers: null
   })
   addLog('warn', 'Restart requested from website', 'Bot stopped, starting fresh in 6s')
-  restartTimer = setTimeout(() => {
-    restartTimer = null
-    connectBot()
-  }, 6000) // server ko purana session band karne ka time
+  restartTimer = setTimeout(() => { restartTimer = null; connectBot() }, 6000)
   return true
 }
 
-// Bot ko poori tarah band karta hai (reconnect bhi nahi hoga)
 function stopBotManual(reason = 'Bot stopped from website') {
   if (stopping || manualStop) return false
   manualStop = true
@@ -234,18 +275,13 @@ function stopBotManual(reason = 'Bot stopped from website') {
   if (restartTimer) { clearTimeout(restartTimer); restartTimer = null }
   killBot()
   setState('stopped', reason, {
-    lastDisconnected: new Date().toISOString(),
-    lastConnected: null,
-    lastError: null,
-    players: 0,
-    playerNames: [],
-    maxPlayers: null
+    lastDisconnected: new Date().toISOString(), lastConnected: null, lastError: null,
+    players: 0, playerNames: [], maxPlayers: null
   })
   addLog('warn', reason, 'Bot Minecraft se disconnect ho gaya, start hone tak offline rahega')
   return true
 }
 
-// Stopped bot ko dobara online karta hai
 function startBotManual() {
   if (stopping || !manualStop) return false
   manualStop = false
@@ -255,7 +291,6 @@ function startBotManual() {
   return true
 }
 
-// Pehle check karta hai ki server ka port is host se khul raha hai ya nahi
 function probe(host, port, ms = 8000) {
   return new Promise(resolve => {
     const s = net.connect({ host, port })
@@ -269,7 +304,6 @@ function probe(host, port, ms = 8000) {
 
 function connectBot() {
   if (stopping || manualStop) return
-
   killBot()
   const myId = botId
   const alive = () => myId === botId && !stopping && !manualStop
@@ -293,21 +327,16 @@ function connectBot() {
   })
 }
 
-// Halki activity: kabhi kabhi ek chhota step + nearest player ki taraf dekhna
 function startActivity(b, alive) {
   const DIRS = ['forward', 'back', 'left', 'right']
   const rand = (min, max) => min + Math.random() * (max - min)
-  let moveTimer = null
-  let holdTimer = null
-  let lookTimer = null
-  let stopped = false
+  let moveTimer = null, holdTimer = null, lookTimer = null, stopped = false
 
   const clearControls = () => {
     for (const c of ['forward', 'back', 'left', 'right', 'jump', 'sprint', 'sneak']) {
       try { b.setControlState(c, false) } catch (_) {}
     }
   }
-
   const stop = () => {
     if (stopped) return
     stopped = true
@@ -318,7 +347,6 @@ function startActivity(b, alive) {
   }
   const dead = () => stopped || !alive() || bot !== b || !b.entity
 
-  // 1) Nearest player ki taraf dekhna (har 3s) - anti-AFK ke liye kaafi hai
   lookTimer = setInterval(() => {
     if (dead()) return stop()
     try {
@@ -331,7 +359,6 @@ function startActivity(b, alive) {
     } catch (_) {}
   }, LOOK_EVERY_MS)
 
-  // 2) Har 20-45s me sirf ek chhota step (0.3-0.7s), sprint nahi
   const smallMove = () => {
     if (dead()) return stop()
     try {
@@ -353,16 +380,11 @@ function startBot(alive) {
 
   try {
     const b = mineflayer.createBot({
-      host: HOST,
-      port: MC_PORT,
-      username: USERNAME,
-      version: VERSION,
-      auth: AUTH,
-      checkTimeoutInterval: KEEPALIVE_TIMEOUT_MS // "client timed out after 30000ms" fix
+      host: HOST, port: MC_PORT, username: USERNAME, version: VERSION, auth: AUTH,
+      checkTimeoutInterval: KEEPALIVE_TIMEOUT_MS
     })
     bot = b
 
-    // Agar 45s me join nahi hua to hang maanke dobara try karo
     connectWatchdog = setTimeout(() => {
       connectWatchdog = null
       if (!alive() || state.status !== 'connecting') return
@@ -374,11 +396,8 @@ function startBot(alive) {
     b.once('spawn', () => {
       if (!alive()) return
       if (connectWatchdog) { clearTimeout(connectWatchdog); connectWatchdog = null }
-      reconnectAttempts = 0 // join ho gaya, backoff reset
-      setState('online', 'Bot is inside Minecraft', {
-        lastConnected: new Date().toISOString(),
-        lastError: null
-      })
+      reconnectAttempts = 0
+      setState('online', 'Bot is inside Minecraft', { lastConnected: new Date().toISOString(), lastError: null })
       addLog('success', `Bot joined Minecraft as ${b.username}`)
       try { b.chat(`Hello! Main ${b.username} hoon 😎`) } catch (_) {}
       updatePlayers()
@@ -388,7 +407,6 @@ function startBot(alive) {
     b.on('playerJoined', () => { if (alive()) updatePlayers() })
     b.on('playerLeft', () => { if (alive()) updatePlayers() })
 
-    // Death ke baad khud respawn
     b.on('death', () => {
       if (!alive()) return
       addLog('warn', 'Bot mar gaya, respawn ho raha hai')
@@ -407,12 +425,8 @@ function startBot(alive) {
       if (!alive()) return
       if (stopActivity) { stopActivity(); stopActivity = null }
       const text = typeof reason === 'string' ? reason : JSON.stringify(reason)
-      setState('offline', 'Bot was kicked from Minecraft', {
-        lastDisconnected: new Date().toISOString(),
-        lastError: text
-      })
+      setState('offline', 'Bot was kicked from Minecraft', { lastDisconnected: new Date().toISOString(), lastError: text })
       addLog('warn', 'Bot kicked from Minecraft', text)
-      // reconnect 'end' event se hoga
     })
 
     b.on('end', reason => {
@@ -420,17 +434,11 @@ function startBot(alive) {
       if (stopActivity) { stopActivity(); stopActivity = null }
       if (connectWatchdog) { clearTimeout(connectWatchdog); connectWatchdog = null }
       const text = reason ? String(reason) : 'Connection ended'
-      setState('offline', 'Minecraft connection ended', {
-        lastDisconnected: new Date().toISOString(),
-        lastError: text
-      })
+      setState('offline', 'Minecraft connection ended', { lastDisconnected: new Date().toISOString(), lastError: text })
       addLog('warn', 'Minecraft connection ended', text)
       scheduleReconnect()
     })
 
-    // FIX: pehle har error par bot ko kill karke reconnect hota tha, isliye bot
-    // khud leave kar deta tha. Ab agar bot online hai to sirf log hoga; asli
-    // disconnect hone par 'end' event reconnect karega.
     b.on('error', error => {
       if (!alive()) return
       const text = error && error.message ? error.message : String(error)
@@ -450,116 +458,21 @@ function startBot(alive) {
   }
 }
 
-function readBody(req, limit = 10000) {
-  return new Promise((resolve, reject) => {
-    let data = ''
-    req.on('data', c => {
-      data += c
-      if (data.length > limit) { reject(new Error('too big')); req.destroy() }
-    })
-    req.on('end', () => resolve(data))
-    req.on('error', reject)
-  })
-}
-
-const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`)
-  const json = { 'Content-Type': 'application/json; charset=utf-8' }
-  const keyOk = () => !RESTART_KEY || url.searchParams.get('key') === RESTART_KEY
-
-  if (url.pathname === '/health') {
-    // Web service alive hai ya nahi (bot ki state JSON me alag se milti hai)
-    res.writeHead(200, json)
-    return res.end(JSON.stringify({ ok: true, ...publicState() }))
-  }
-
-  if (url.pathname === '/api/status') {
-    res.writeHead(200, {
-      'Content-Type': 'application/json; charset=utf-8',
-      'Cache-Control': 'no-store'
-    })
-    return res.end(JSON.stringify(publicState()))
-  }
-
-  if (['/api/restart', '/api/stop', '/api/start'].includes(url.pathname)) {
-    if (req.method !== 'POST') { res.writeHead(405, json); return res.end('{"ok":false}') }
-    if (!keyOk()) { res.writeHead(403, json); return res.end('{"ok":false,"error":"key"}') }
-    const action = { '/api/restart': restartBot, '/api/stop': () => stopBotManual(), '/api/start': startBotManual }[url.pathname]
-    const ok = action()
-    res.writeHead(ok ? 200 : 409, json)
-    return res.end(JSON.stringify({ ok }))
-  }
-
-  if (url.pathname === '/api/schedule') {
-    if (req.method === 'GET') {
-      res.writeHead(200, json)
-      return res.end(JSON.stringify(publicState().schedule))
-    }
-    if (req.method !== 'POST') { res.writeHead(405, json); return res.end('{"ok":false}') }
-    if (!keyOk()) { res.writeHead(403, json); return res.end('{"ok":false,"error":"key"}') }
-    try {
-      const body = JSON.parse(await readBody(req))
-      const slots = cleanSlots(body.slots)
-      if (Array.isArray(body.slots) && slots.length !== body.slots.length) {
-        res.writeHead(400, json)
-        return res.end('{"ok":false,"error":"invalid slots"}')
-      }
-      schedule = { enabled: !!body.enabled && slots.length > 0, slots }
-      saveSchedule()
-      lastDesired = null
-      addLog('info', schedule.enabled ? 'Schedule saved (ON)' : 'Schedule saved (OFF)',
-        schedule.slots.map(s => `${s.join} -> ${s.leave}`).join(', ') || 'No slots')
-      evaluateSchedule(true) // abhi ke time ke hisaab se turant apply karo
-      res.writeHead(200, json)
-      return res.end(JSON.stringify({ ok: true, schedule: publicState().schedule }))
-    } catch (_) {
-      res.writeHead(400, json)
-      return res.end('{"ok":false,"error":"bad request"}')
-    }
-  }
-
-  if (url.pathname === '/api/events') {
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream; charset=utf-8',
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Connection': 'keep-alive',
-      'X-Accel-Buffering': 'no'
-    })
-    res.write(`data: ${JSON.stringify(publicState())}\n\n`)
-    clients.add(res)
-    req.on('close', () => clients.delete(res))
-    return
-  }
-
-  if (url.pathname === '/' || url.pathname === '/index.html') {
-    const file = path.join(__dirname, 'public', 'index.html')
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
-    return fs.createReadStream(file).pipe(res)
-  }
-
-  res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' })
-  res.end('Not found')
-})
-
-server.listen(PORT, '0.0.0.0', () => {
-  addLog('success', `Status website listening on 0.0.0.0:${PORT}`)
-  loadSchedule()
-  if (schedule.enabled) addLog('info', 'Schedule loaded', schedule.slots.map(s => `${s.join} -> ${s.leave}`).join(', '))
-  evaluateSchedule(true) // agar abhi schedule ke bahar ho to bot start hi nahi hoga
-  if (!manualStop) connectBot()
-})
+// ---------- Start ----------
+addLog('success', 'PC bot started', `Website: ${WEBSITE_URL}`)
+loadSchedule()
+if (schedule.enabled) addLog('info', 'Schedule loaded', schedule.slots.map(s => `${s.join} -> ${s.leave}`).join(', '))
+evaluateSchedule(true)
+if (!manualStop) connectBot()
+pushState()
+pollCommands()
 
 process.on('SIGTERM', shutdown)
 process.on('SIGINT', shutdown)
 
-// FIX: pehle koi bhi stray exception aane par online bot bhi kill ho jata tha.
-// Ab sirf tab restart hota hai jab bot online nahi hai.
 process.on('uncaughtException', err => {
   addLog('error', 'Uncaught exception', err && err.stack ? err.stack : err)
-  if (state.status !== 'online') {
-    killBot()
-    scheduleReconnect()
-  }
+  if (state.status !== 'online') { killBot(); scheduleReconnect() }
 })
 process.on('unhandledRejection', err => {
   addLog('error', 'Unhandled rejection', err && err.message ? err.message : err)
@@ -573,9 +486,5 @@ function shutdown() {
   if (connectWatchdog) clearTimeout(connectWatchdog)
   if (stopActivity) { stopActivity(); stopActivity = null }
   try { if (bot) bot.end() } catch (_) {}
-  for (const res of clients) {
-    try { res.end() } catch (_) {}
-  }
-  server.close(() => process.exit(0))
-  setTimeout(() => process.exit(0), 5000).unref()
+  setTimeout(() => process.exit(0), 500)
 }
