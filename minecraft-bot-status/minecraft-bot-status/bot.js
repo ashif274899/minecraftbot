@@ -9,7 +9,7 @@ const crypto = require('crypto')
 
 const PORT = Number(process.env.PORT || 10000)
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'ashif@2011' // admin panel password (Render me ADMIN_PASSWORD env se badal sakte ho)
-const BOT_TOKEN = process.env.BOT_TOKEN || '895093849035857820970927'       // PC bot aur website ke beech secret token (zaroor set karo)
+const BOT_TOKEN = process.env.BOT_TOKEN || '895093849035857820970927'       // Render Environment me set karo (code me mat likho)
 const PC_TIMEOUT_MS = 20000                         // itne time tak PC se push na aaye to "offline"
 
 if (!BOT_TOKEN) console.warn('WARNING: BOT_TOKEN set nahi hai - koi bhi fake state push kar sakta hai!')
@@ -100,7 +100,7 @@ function readBody(req, limit = 600000) {
   })
 }
 
-const server = http.createServer(async (req, res) => {
+const handle = async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`)
   const json = { 'Content-Type': 'application/json; charset=utf-8' }
   const keyOk = () => authed(req)
@@ -128,7 +128,7 @@ const server = http.createServer(async (req, res) => {
     return res.end('{"ok":true}')
   }
   if (url.pathname === '/api/admin/login' && req.method === 'POST') {
-    const ip = ipOf(), now = Date.now(), rec = fails.get(ip) || { n: 0, until: 0 }
+    const ip = ipOf(req), now = Date.now(), rec = fails.get(ip) || { n: 0, until: 0 }
     if (now - gfail.t > 900000) { gfail.n = 0; gfail.t = now }
     if (rec.until > now || gfail.n >= 40) {
       res.writeHead(429, json)
@@ -247,6 +247,12 @@ const server = http.createServer(async (req, res) => {
 
   res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' })
   res.end('Not found')
+}
+const server = http.createServer((req, res) => {
+  handle(req, res).catch(e => {
+    console.error('Request error:', e)
+    try { if (!res.headersSent) res.writeHead(500, { 'Content-Type': 'application/json' }); res.end('{"ok":false,"error":"server"}') } catch (_) {}
+  })
 })
 
 server.listen(PORT, '0.0.0.0', () => console.log(`Website listening on 0.0.0.0:${PORT}`))
