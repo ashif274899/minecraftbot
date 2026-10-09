@@ -5,9 +5,10 @@
 const http = require('http')
 const fs = require('fs')
 const path = require('path')
+const crypto = require('crypto')
 
 const PORT = Number(process.env.PORT || 10000)
-const RESTART_KEY = process.env.RESTART_KEY || ''   // dashboard se restart/stop/start/schedule ki key (optional)
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'ashif@2011' // admin panel password (Render me ADMIN_PASSWORD env se badal sakte ho)
 const BOT_TOKEN = process.env.BOT_TOKEN || '895093849035857820970927'       // PC bot aur website ke beech secret token (zaroor set karo)
 const PC_TIMEOUT_MS = 20000                         // itne time tak PC se push na aaye to "offline"
 
@@ -18,6 +19,23 @@ let lastPush = 0
 let wasOnline = false
 const queue = []         // PC bot ke liye pending commands
 const clients = new Set()
+
+// ---------- Admin auth (server-side, password JS me kahin nahi hai) ----------
+const sha = s => crypto.createHash('sha256').update(String(s)).digest()
+const passOk = p => crypto.timingSafeEqual(sha(p), sha(ADMIN_PASSWORD))
+const sessions = new Map()          // token -> expiry
+const fails = new Map()             // ip -> { n, until }
+const gfail = { n: 0, t: 0 }        // sabhi IPs ka total
+const SESSION_MS = 8 * 3600 * 1000
+const sleep = ms => new Promise(r => setTimeout(r, ms))
+const cookieOf = req => (/(?:^|;\s*)sid=([a-f0-9]{64})/.exec(req.headers.cookie || '') || [])[1]
+const authed = req => (sessions.get(cookieOf(req)) || 0) > Date.now()
+const ipOf = req => String(req.headers['x-forwarded-for'] || req.socket.remoteAddress).split(',')[0].trim()
+setInterval(() => {
+  const n = Date.now()
+  for (const [k, v] of sessions) if (v < n) sessions.delete(k)
+  for (const [k, v] of fails) if (v.until < n) fails.delete(k)
+}, 60000)
 
 const pcOnline = () => remote && Date.now() - lastPush < PC_TIMEOUT_MS
 
@@ -85,8 +103,54 @@ function readBody(req, limit = 600000) {
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`)
   const json = { 'Content-Type': 'application/json; charset=utf-8' }
-  const keyOk = () => !RESTART_KEY || url.searchParams.get('key') === RESTART_KEY
+  const keyOk = () => authed(req)
   const botOk = () => !BOT_TOKEN || req.headers['x-bot-token'] === BOT_TOKEN
+
+  // Security headers
+  res.setHeader('X-Content-Type-Options', 'nosniff')
+  res.setHeader('X-Frame-Options', 'DENY')
+  res.setHeader('Referrer-Policy', 'no-referrer')
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://mc-heads.net; media-src 'self' https://www.image2url.com; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
+  // CSRF: browser se aaya POST sirf isi site se allowed
+  if (req.method === 'POST' && req.headers.origin) {
+    let okOrigin = false
+    try { okOrigin = new URL(req.headers.origin).host === req.headers.host } catch (_) {}
+    if (!okOrigin) { res.writeHead(403, json); return res.end('{"ok":false,"error":"origin"}') }
+  }
+
+  if (url.pathname === '/api/admin/session') {
+    res.writeHead(200, { ...json, 'Cache-Control': 'no-store' })
+    return res.end(JSON.stringify({ ok: authed(req) }))
+  }
+  if (url.pathname === '/api/admin/logout' && req.method === 'POST') {
+    sessions.delete(cookieOf(req))
+    res.writeHead(200, { ...json, 'Set-Cookie': 'sid=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0' })
+    return res.end('{"ok":true}')
+  }
+  if (url.pathname === '/api/admin/login' && req.method === 'POST') {
+    const ip = ipOf(), now = Date.now(), rec = fails.get(ip) || { n: 0, until: 0 }
+    if (now - gfail.t > 900000) { gfail.n = 0; gfail.t = now }
+    if (rec.until > now || gfail.n >= 40) {
+      res.writeHead(429, json)
+      return res.end(JSON.stringify({ ok: false, error: 'locked', wait: Math.ceil(Math.max(rec.until - now, 60000) / 1000) }))
+    }
+    let pw = ''
+    try { pw = String(JSON.parse(await readBody(req, 2000)).password || '') } catch (_) {}
+    if (pw && passOk(pw)) {
+      fails.delete(ip)
+      const tok = crypto.randomBytes(32).toString('hex')
+      sessions.set(tok, Date.now() + SESSION_MS)
+      const secure = req.headers['x-forwarded-proto'] === 'https' ? '; Secure' : ''
+      res.writeHead(200, { ...json, 'Set-Cookie': `sid=${tok}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_MS / 1000}${secure}` })
+      return res.end('{"ok":true}')
+    }
+    rec.n++; gfail.n++
+    if (rec.n >= 5) { rec.until = Date.now() + 15 * 60000; rec.n = 0 } // 5 galat = 15 min lock
+    fails.set(ip, rec)
+    await sleep(800) // brute-force slow
+    res.writeHead(401, json)
+    return res.end('{"ok":false,"error":"wrong"}')
+  }
 
   if (url.pathname === '/health') {
     res.writeHead(200, json)
@@ -175,9 +239,9 @@ const server = http.createServer(async (req, res) => {
     return
   }
 
-  if (url.pathname === '/' || url.pathname === '/index.html') {
-    const file = path.join(__dirname, 'public', 'index.html')
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+  if (['/', '/index.html', '/admin', '/admin.html'].includes(url.pathname)) {
+    const file = path.join(__dirname, 'public', url.pathname.startsWith('/admin') ? 'admin.html' : 'index.html')
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' })
     return fs.createReadStream(file).pipe(res)
   }
 
