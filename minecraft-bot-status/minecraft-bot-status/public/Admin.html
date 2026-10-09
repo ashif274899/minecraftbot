@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="robots" content="noindex,nofollow" />
+<title>Admin • Sarifon Ki Minecraft</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+:root{color-scheme:dark;--bg:#0b0d10;--card:#14171c;--line:#ffffff14;--muted:#9aa3ad;--green:#1ed760;--red:#f3727f;--yellow:#ffa42b;--blue:#509bf5;--accent:var(--yellow)}
+*{box-sizing:border-box}body.online{--accent:var(--green)}body.offline,body.error{--accent:var(--red)}body.stopped{--accent:#727272}
+body{margin:0;min-height:100dvh;font-family:Figtree,system-ui,sans-serif;color:#fff;background:radial-gradient(900px 500px at 80% -10%,color-mix(in srgb,var(--accent) 22%,transparent),transparent),var(--bg);transition:background .6s}
+button,input{font-family:inherit;color:inherit}
+.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.wrap{max-width:1000px;margin:0 auto;padding:20px 16px calc(40px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;animation:up .5s both}
+header h1{margin:0;font-size:clamp(20px,4vw,28px);font-weight:900;letter-spacing:-.03em}
+header .sp{flex:1}
+.badge{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:#ffffff0f;border:1px solid var(--line);font-size:13px;font-weight:700}
+.badge i{width:9px;height:9px;border-radius:50%;background:var(--accent);animation:ping 1.8s infinite}
+@keyframes ping{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 60%,transparent)}100%{box-shadow:0 0 0 10px transparent}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid #ffffff33;background:none;border-radius:12px;padding:11px 18px;font-weight:800;font-size:14px;cursor:pointer;transition:.18s}
+.btn:hover{transform:translateY(-2px);background:#ffffff14}.btn:active{transform:scale(.97)}.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn.g{border-color:var(--green);color:var(--green);background:#1ed7601a}.btn.g:hover{background:var(--green);color:#000}
+.btn.r{border-color:var(--red);color:var(--red);background:#f3727f1a}.btn.r:hover{background:var(--red);color:#000}
+.btn.y{border-color:var(--yellow);color:var(--yellow);background:#ffa42b1a}.btn.y:hover{background:var(--yellow);color:#000}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;animation:up .55s both;transition:.2s}
+.card:hover{border-color:#ffffff2e;transform:translateY(-3px)}
+.grid .card:nth-child(2){animation-delay:.06s}.grid .card:nth-child(3){animation-delay:.12s}.grid .card:nth-child(4){animation-delay:.18s}
+@keyframes up{from{opacity:0;transform:translateY(18px)}}
+.l{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.v{margin-top:6px;font-size:22px;font-weight:900;word-break:break-word}.v.s{font-size:14px;font-weight:700}
+h2{margin:0 0 14px;font-size:18px;font-weight:800;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:5px;height:18px;border-radius:2px;background:var(--accent)}
+.acts{display:flex;gap:10px;flex-wrap:wrap}
+.hint{font-size:12px;color:var(--muted);margin-top:10px;font-weight:600}
+.sw{display:inline-flex;align-items:center;gap:10px;font-weight:800;cursor:pointer;margin-bottom:10px}.sw input{width:20px;height:20px;accent-color:var(--green)}
+.next{font-weight:800;color:var(--green);margin:4px 0 12px;font-size:14px}.next.off{color:var(--muted)}
+.slot{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;background:#0d1014;border:1px solid var(--line);padding:12px;border-radius:12px;margin-bottom:8px;animation:up .3s both}
+.slot label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:700}
+.slot input{background:#05070a;border:1px solid #2a2f37;border-radius:8px;padding:9px 10px;font:700 15px Figtree,sans-serif;color-scheme:dark}
+.x{background:none;border:0;color:var(--muted);cursor:pointer;padding:8px;border-radius:50%;margin-left:auto}.x:hover{color:var(--red);background:#ffffff10}
+.log{max-height:300px;overflow:auto;font:12px/1.6 ui-monospace,Menlo,monospace;scrollbar-width:thin}
+.log div{display:flex;gap:10px;padding:5px 0;border-bottom:1px solid #ffffff0a;animation:up .3s both}.log time{color:var(--muted);flex:none}
+.log .success{color:var(--green)}.log .error{color:var(--red)}.log .warn{color:var(--yellow)}.log .info{color:var(--blue)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,30px);opacity:0;background:#fff;color:#000;font-weight:800;font-size:14px;padding:12px 20px;border-radius:10px;transition:.3s;z-index:300;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{transform:translate(-50%,0);opacity:1}
+#app[hidden]{display:none}
+
+/* Login gate */
+.gate{position:fixed;inset:0;z-index:200;display:grid;place-items:center;padding:20px;background:radial-gradient(700px 400px at 50% 0,#1ed76026,transparent),#05070a;transition:opacity .45s,visibility .45s}
+.gate.hide{opacity:0;visibility:hidden}
+.box{width:min(400px,100%);background:var(--card);border:1px solid var(--line);border-radius:22px;padding:30px 24px;text-align:center;box-shadow:0 30px 80px #000c;animation:pop .5s both}
+@keyframes pop{from{opacity:0;transform:scale(.92) translateY(14px)}}
+.box.shake{animation:shake .45s}@keyframes shake{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+.lock{width:64px;height:64px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;background:#1ed7601f;color:var(--green);animation:float 3s ease-in-out infinite}.lock .i{width:30px;height:30px}
+@keyframes float{50%{transform:translateY(-6px)}}
+.box h2{justify-content:center;margin:0 0 6px;font-size:22px}.box h2::before{display:none}.box p{margin:0 0 20px;color:var(--muted);font-size:14px;font-weight:600}
+.pw{position:relative}.pw input{width:100%;background:#05070a;border:1px solid #2a2f37;border-radius:12px;padding:14px 46px 14px 14px;font-size:16px;font-weight:700;outline:0;transition:.2s}
+.pw input:focus{border-color:var(--green);box-shadow:0 0 0 3px #1ed76033}
+.pw button{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--muted);cursor:pointer;padding:8px}
+.err{min-height:20px;margin:12px 0 4px;color:var(--red);font-size:13px;font-weight:700}
+.box .btn{width:100%;padding:14px}
+.back{display:inline-block;margin-top:16px;color:var(--muted);font-size:13px;font-weight:700;text-decoration:none}.back:hover{color:#fff}
+
+/* Confirm modal */
+.modal{position:fixed;inset:0;z-index:150;display:none;place-items:center;padding:20px;background:#000a;backdrop-filter:blur(4px)}.modal.show{display:grid}
+.modal .box{text-align:left}.modal h2{justify-content:flex-start}.modal .acts{margin-top:18px}.modal .btn{flex:1;width:auto}
+@media(max-width:600px){.btn{padding:12px 14px}.acts .btn{flex:1 1 140px}.slot label{flex:1 1 120px}.slot input{width:100%}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+<symbol id="eye" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="power" viewBox="0 0 24 24"><path d="M12 3v9M6.3 6.8a8 8 0 1 0 11.4 0"/></symbol>
+<symbol id="stop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></symbol>
+<symbol id="play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></symbol>
+<symbol id="x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+<symbol id="out" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+</defs></svg>
+
+<div class="gate" id="gate">
+  <div class="box" id="lbox">
+    <div class="lock"><svg class="i"><use href="#lock"/></svg></div>
+    <h2>Admin access</h2>
+    <p>Bot controls dekhne ke liye password daalo</p>
+    <div class="pw"><input id="pw" type="password" placeholder="Password" autocomplete="current-password" autofocus /><button id="eye" type="button" aria-label="Show password"><svg class="i"><use href="#eye"/></svg></button></div>
+    <div class="err" id="err" role="alert"></div>
+    <button class="btn g" id="login">Unlock</button>
+    <a class="back" href="/">← Dashboard par wapas</a>
+  </div>
+</div>
+
+<div class="modal" id="modal"><div class="box"><h2 id="mt">Confirm</h2><p id="mp"></p><div class="acts"><button class="btn" id="mno">Cancel</button><button class="btn r" id="myes">Confirm</button></div></div></div>
+
+<div class="wrap" id="app" hidden>
+  <header>
+    <h1>Bot control panel</h1>
+    <span class="badge"><i></i><span id="bst">—</span></span>
+    <span class="sp"></span>
+    <a class="btn" href="/">Dashboard</a>
+    <button class="btn" id="logout"><svg class="i"><use href="#out"/></svg>Logout</button>
+  </header>
+
+  <div class="grid">
+    <div class="card"><div class="l">Status</div><div class="v" id="cs">—</div><div class="hint" id="cm">—</div></div>
+    <div class="card"><div class="l">Players online</div><div class="v" id="cp">—</div><div class="hint" id="cn">—</div></div>
+    <div class="card"><div class="l">Bot username</div><div class="v s" id="cu">—</div><div class="hint" id="csv">—</div></div>
+    <div class="card"><div class="l">PC link</div><div class="v s" id="cpc">—</div><div class="hint" id="cer">—</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <h2>Controls</h2>
+    <div class="acts">
+      <button class="btn y" id="bR"><svg class="i"><use href="#power"/></svg>Restart bot</button>
+      <button class="btn r" id="bS"><svg class="i"><use href="#stop"/></svg>Stop bot</button>
+      <button class="btn g" id="bG" hidden><svg class="i"><use href="#play"/></svg>Start bot</button>
+    </div>
+    <div class="hint">Commands tumhare PC wale bot ko jaate hain (2-3 second me apply). PC offline ho to buttons kaam nahi karenge.</div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <h2>Schedule</h2>
+    <label class="sw"><input type="checkbox" id="en" />Schedule ON</label>
+    <div class="hint" id="tz" style="margin:0 0 6px">—</div>
+    <div class="next off" id="nx">Schedule off hai</div>
+    <div id="slots"></div>
+    <div class="acts" style="margin-top:10px"><button class="btn" id="add">+ Add slot</button><button class="btn g" id="save">Save schedule</button></div>
+    <div class="hint">Raat wala slot bhi chalega (jaise 22:00 → 02:00).</div>
+  </div>
+
+  <div class="card"><h2>Live events</h2><div class="log" id="log"></div></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=id=>document.getElementById(id)
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))
+const nice=s=>({online:'Online',connecting:'Connecting…',starting:'Starting…',offline:'Offline',error:'Error',stopped:'Stopped'})[s]||s||'—'
+let draft={enabled:false,slots:[]},dirty=false,src=null,busy=false
+function toast(m){const e=$('toast');e.textContent=m;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),2800)}
+const post=(u,b)=>fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:b?JSON.stringify(b):undefined,credentials:'same-origin'})
+
+function lock(msg){
+  if(src){src.close();src=null}
+  $('app').hidden=true;$('gate').classList.remove('hide');$('pw').value='';$('err').textContent=msg||'';setTimeout(()=>$('pw').focus(),100)
+}
+function unlock(){
+  $('gate').classList.add('hide');$('app').hidden=false
+  if(!src){src=new EventSource('/api/events');src.onmessage=e=>render(JSON.parse(e.data))}
+}
+async function login(){
+  const pw=$('pw').value;if(!pw||busy)return;busy=true;$('login').disabled=true;$('err').textContent=''
+  try{
+    const r=await post('/api/admin/login',{password:pw})
+    if(r.ok){$('pw').value='';unlock()}
+    else{
+      const j=await r.json().catch(()=>({}))
+      $('err').textContent=r.status===429?`Bahut zyada galat try. ${Math.ceil((j.wait||900)/60)} minute baad try karo.`:'Galat password'
+      const b=$('lbox');b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake');$('pw').select()
+    }
+  }catch{$('err').textContent='Server tak nahi pahuncha'}
+  busy=false;$('login').disabled=false
+}
+function ask(t,p,yes){
+  $('mt').textContent=t;$('mp').textContent=p;$('modal').classList.add('show')
+  $('mno').onclick=()=>$('modal').classList.remove('show')
+  $('myes').onclick=()=>{$('modal').classList.remove('show');yes()}
+}
+async function act(a){
+  const btns=['bR','bS','bG'].map($);btns.forEach(b=>b.disabled=true)
+  try{
+    const r=await post('/api/'+a)
+    if(r.status===403)lock('Session khatam. Dobara login karo.')
+    else toast(r.ok?({restart:'Bot restart ho raha hai…',stop:'Bot stop ho gaya',start:'Bot start ho raha hai…'})[a]:(r.status===409?'PC wala bot connect nahi hai':'Ye action abhi possible nahi'))
+  }catch{toast('Server tak nahi pahuncha')}
+  setTimeout(()=>btns.forEach(b=>b.disabled=false),2000)
+}
+function slots(){
+  $('en').checked=draft.enabled
+  $('slots').innerHTML=draft.slots.length?draft.slots.map((s,i)=>`<div class="slot"><label>Join<input type="time" data-i="${i}" data-k="join" value="${esc(s.join)}"></label><label>Leave<input type="time" data-i="${i}" data-k="leave" value="${esc(s.leave)}"></label><button class="x" data-del="${i}" aria-label="Remove slot"><svg class="i"><use href="#x"/></svg></button></div>`).join(''):'<div class="hint">Koi slot nahi. "Add slot" dabao.</div>'
+}
+async function save(){
+  for(const s of draft.slots){if(!s.join||!s.leave)return toast('Har slot me Join aur Leave time bharo');if(s.join===s.leave)return toast('Join aur Leave time alag hone chahiye')}
+  if(draft.enabled&&!draft.slots.length)return toast('Schedule ON karne ke liye pehle slot add karo')
+  $('save').disabled=true
+  try{
+    const r=await post('/api/schedule',draft)
+    if(r.status===403)lock('Session khatam. Dobara login karo.')
+    else if(r.ok){dirty=false;toast('Schedule save ho gaya')}
+    else toast(r.status===409?'PC wala bot connect nahi hai':'Schedule save nahi hua')
+  }catch{toast('Server tak nahi pahuncha')}
+  setTimeout(()=>$('save').disabled=false,800)
+}
+function render(d){
+  document.body.className=d.status||''
+  const s=d.status||'',stp=s==='stopped'
+  $('bst').textContent=nice(s);$('cs').textContent=nice(s);$('cm').textContent=d.message||'—'
+  $('cp').textContent=s==='online'?(d.players||0)+(d.maxPlayers?' / '+d.maxPlayers:''):'—'
+  $('cn').textContent=(d.playerNames||[]).slice(0,5).join(', ')||'—'
+  $('cu').textContent=d.username||'—';$('csv').textContent=d.server||'—'
+  $('cpc').textContent=d.pcOnline===false?'PC offline':'PC connected';$('cer').textContent=d.lastError||'No errors'
+  $('bS').hidden=stp;$('bR').hidden=stp&&false;$('bG').hidden=!stp
+  const sc=d.schedule
+  if(sc){
+    $('tz').textContent=`Timezone: ${sc.tz} • Abhi: ${sc.now}`
+    const n=sc.next,h=n?Math.floor(n.inMin/60):0,m=n?n.inMin%60:0
+    $('nx').className='next'+(sc.enabled&&n?'':' off')
+    $('nx').textContent=sc.enabled&&n?`Next: bot ${n.type==='join'?'JOIN karega':'LEAVE karega'} ${n.time} baje (${h?h+'h ':''}${m}m me)`:'Schedule off hai'
+    if(!dirty){draft={enabled:!!sc.enabled,slots:(sc.slots||[]).map(x=>({join:x.join,leave:x.leave}))};slots()}
+  }
+  $('log').innerHTML=(d.logs||[]).slice(-40).reverse().map(l=>`<div class="${esc(l.level)}"><time>${esc(new Date(l.time).toLocaleTimeString())}</time><span>${esc(l.message)}${l.details?' — '+esc(l.details):''}</span></div>`).join('')||'<div>No events yet</div>'
+}
+
+$('login').onclick=login
+$('pw').onkeydown=e=>{if(e.key==='Enter')login()}
+$('eye').onclick=()=>{const p=$('pw');p.type=p.type==='password'?'text':'password'}
+$('logout').onclick=async()=>{await post('/api/admin/logout').catch(()=>{});lock('Logout ho gaya')}
+$('bR').onclick=()=>ask('Restart bot?','Bot Minecraft se disconnect hoke dobara start hoga.',()=>act('restart'))
+$('bS').onclick=()=>ask('Stop bot?','Jab tak Start nahi dabaoge bot offline rahega.',()=>act('stop'))
+$('bG').onclick=()=>act('start')
+$('en').onchange=e=>{draft.enabled=e.target.checked;dirty=true}
+$('add').onclick=()=>{if(draft.slots.length>=12)return toast('Max 12 slots');draft.slots.push({join:'18:00',leave:'23:00'});dirty=true;slots()}
+$('slots').oninput=e=>{const t=e.target;if(t.dataset.k){draft.slots[t.dataset.i][t.dataset.k]=t.value;dirty=true}}
+$('slots').onclick=e=>{const b=e.target.closest('[data-del]');if(b){draft.slots.splice(Number(b.dataset.del),1);dirty=true;slots()}}
+$('save').onclick=save
+
+fetch('/api/admin/session',{credentials:'same-origin',cache:'no-store'}).then(r=>r.json()).then(j=>j.ok?unlock():$('pw').focus()).catch(()=>{})
+</script>
+</body>
+</html>
