@@ -8,7 +8,7 @@ const path = require('path')
 const crypto = require('crypto')
 
 const PORT = Number(process.env.PORT || 10000)
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'ashif@2011' // admin panel password (Render me ADMIN_PASSWORD env se badal sakte ho)
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'sarifon67' // admin panel password (Render me ADMIN_PASSWORD env se badal sakte ho)
 const BOT_TOKEN = process.env.BOT_TOKEN || '895093849035857820970927'       // Render Environment me set karo (code me mat likho)
 const PC_TIMEOUT_MS = 20000                         // itne time tak PC se push na aaye to "offline"
 
@@ -39,7 +39,8 @@ setInterval(() => {
 
 const pcOnline = () => remote && Date.now() - lastPush < PC_TIMEOUT_MS
 
-function publicState() {
+function publicState() { const { admin, ...r } = stateFull(); return r } // admin data public me nahi jata
+function stateFull() {
   const base = remote || {
     status: 'offline', message: '', since: new Date().toISOString(),
     lastConnected: null, lastDisconnected: null, lastError: null,
@@ -86,6 +87,26 @@ function cleanSlots(slots) {
     .filter(s => s && TIME_RE.test(s.join) && TIME_RE.test(s.leave) && s.join !== s.leave)
     .slice(0, 12)
     .map(s => ({ join: s.join, leave: s.leave }))
+}
+
+let lastChatAt = 0
+function cleanCmd(b) {
+  if (!b || typeof b !== 'object') return null
+  if (b.type === 'chat') {
+    const text = String(b.text || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 256)
+    if (!text || Date.now() - lastChatAt < 600) return null
+    lastChatAt = Date.now()
+    return { type: 'chat', text }
+  }
+  if (b.type === 'config') {
+    const d = b.data || {}, port = Number(d.port)
+    if (!/^\w{3,16}$/.test(String(d.username)) || !/^[A-Za-z0-9.\-]{3,100}$/.test(String(d.host)) || !(port >= 1 && port <= 65535) || !/^[A-Za-z0-9.\-]{1,20}$/.test(String(d.version))) return null
+    return { type: 'config', data: { username: String(d.username), host: String(d.host), port, version: String(d.version) } }
+  }
+  if (b.type === 'move' && ['forward', 'back', 'left', 'right', 'jump'].includes(b.dir)) return { type: 'move', dir: b.dir, ms: Math.min(Math.max(Number(b.ms) || 600, 100), 3000) }
+  if (b.type === 'toggle' && ['activity', 'helloReply', 'greet'].includes(b.key)) return { type: 'toggle', key: b.key, value: !!b.value }
+  if (b.type === 'respawn') return { type: 'respawn' }
+  return null
 }
 
 function readBody(req, limit = 600000) {
@@ -155,6 +176,24 @@ const handle = async (req, res) => {
   if (url.pathname === '/health') {
     res.writeHead(200, json)
     return res.end(JSON.stringify({ ok: true, pcOnline: !!pcOnline() }))
+  }
+
+  // ----- Admin: private data + commands (login zaroori) -----
+  if (url.pathname === '/api/admin/data') {
+    if (!authed(req)) { res.writeHead(403, json); return res.end('{"ok":false}') }
+    res.writeHead(200, { ...json, 'Cache-Control': 'no-store' })
+    return res.end(JSON.stringify({ ok: true, pcOnline: !!pcOnline(), admin: (remote && remote.admin) || null }))
+  }
+  if (url.pathname === '/api/admin/cmd' && req.method === 'POST') {
+    if (!authed(req)) { res.writeHead(403, json); return res.end('{"ok":false}') }
+    if (!pcOnline()) { res.writeHead(409, json); return res.end('{"ok":false,"error":"pc offline"}') }
+    try {
+      const cmd = cleanCmd(JSON.parse(await readBody(req, 4000)))
+      if (!cmd || queue.length > 50) { res.writeHead(400, json); return res.end('{"ok":false,"error":"invalid"}') }
+      queue.push(cmd)
+      res.writeHead(200, json)
+      return res.end('{"ok":true}')
+    } catch (_) { res.writeHead(400, json); return res.end('{"ok":false,"error":"bad request"}') }
   }
 
   // ----- PC bot -> website: state push -----
