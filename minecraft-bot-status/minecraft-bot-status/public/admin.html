@@ -142,7 +142,7 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const nice=s=>({online:'Online',connecting:'Connecting…',starting:'Starting…',offline:'Offline',error:'Error',stopped:'Stopped'})[s]||s||'—'
 let draft={enabled:false,slots:[]},dirty=false,src=null,busy=false
 function toast(m){const e=$('toast');e.textContent=m;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),2800)}
-const post=(u,b)=>fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:b?JSON.stringify(b):undefined,credentials:'same-origin'})
+const post=(u,b)=>fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:b?JSON.stringify(b):undefined,credentials:'same-origin',signal:AbortSignal.timeout(15000)})
 
 function lock(msg){
   if(src){src.close();src=null}
