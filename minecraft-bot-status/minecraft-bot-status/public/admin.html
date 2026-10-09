@@ -67,6 +67,17 @@ h2::before{content:"";width:5px;height:18px;border-radius:2px;background:var(--a
 /* Confirm modal */
 .modal{position:fixed;inset:0;z-index:150;display:none;place-items:center;padding:20px;background:#000a;backdrop-filter:blur(4px)}.modal.show{display:grid}
 .modal .box{text-align:left}.modal h2{justify-content:flex-start}.modal .acts{margin-top:18px}.modal .btn{flex:1;width:auto}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}.two .card:hover{transform:none}
+.chat{height:280px;overflow:auto;background:#0d1014;border:1px solid var(--line);border-radius:12px;padding:10px;font-size:13px;display:flex;flex-direction:column;gap:4px;scrollbar-width:thin}
+.chat div{padding:5px 9px;border-radius:8px;background:#ffffff0a;word-break:break-word;animation:up .25s both}
+.chat .out{align-self:flex-end;background:#1ed76026;color:#bdf5cf}.chat time{color:var(--muted);font-size:11px;margin-right:6px}
+.send{display:flex;gap:8px;margin-top:10px}
+.inp{width:100%;min-width:0;background:#05070a;border:1px solid #2a2f37;border-radius:10px;padding:12px;font:600 14px Figtree,sans-serif;outline:0;transition:.2s}.inp:focus{border-color:var(--green);box-shadow:0 0 0 3px #1ed76026}
+.f{display:grid;gap:10px;grid-template-columns:1fr 1fr}.f label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:700}.f .w{grid-column:1/-1}
+.tg{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #ffffff0a;font-weight:700;font-size:14px;cursor:pointer}.tg input{width:20px;height:20px;accent-color:var(--green)}
+.pad{display:grid;grid-template-columns:repeat(3,56px);gap:8px;justify-content:center;margin:6px 0 12px}.pad .btn{padding:12px 0}
+.stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:10px;margin-bottom:14px}.stat div{background:#0d1014;border:1px solid var(--line);border-radius:12px;padding:10px}.stat b{display:block;font-size:16px;margin-top:2px;word-break:break-word}
+@media(max-width:800px){.two{grid-template-columns:1fr}}
 @media(max-width:600px){.btn{padding:12px 14px}.acts .btn{flex:1 1 140px}.slot label{flex:1 1 120px}.slot input{width:100%}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -122,6 +133,32 @@ h2::before{content:"";width:5px;height:18px;border-radius:2px;background:var(--a
     <div class="hint">Commands tumhare PC wale bot ko jaate hain (2-3 second me apply). PC offline ho to buttons kaam nahi karenge.</div>
   </div>
 
+  <div class="two">
+    <div class="card"><h2>Minecraft chat</h2>
+      <div class="chat" id="chat"></div>
+      <div class="send"><input class="inp" id="msg" maxlength="256" placeholder="Message ya /command likho…" autocomplete="off"><button class="btn g" id="sendBtn">Send</button></div>
+      <div class="hint">Jo likhoge bot Minecraft chat me bolega. "/" se shuru karoge to command chalega (bot ke paas OP ho to).</div>
+    </div>
+    <div class="card"><h2>Bot info &amp; movement</h2>
+      <div class="stat" id="stat"></div>
+      <div class="pad"><span></span><button class="btn" data-mv="forward" aria-label="Forward">↑</button><span></span><button class="btn" data-mv="left" aria-label="Left">←</button><button class="btn" data-mv="jump" aria-label="Jump">⤒</button><button class="btn" data-mv="right" aria-label="Right">→</button><span></span><button class="btn" data-mv="back" aria-label="Back">↓</button><span></span></div>
+      <div class="acts" style="justify-content:center"><button class="btn" id="respawn">Respawn</button></div>
+    </div>
+  </div>
+  <div class="two">
+    <div class="card"><h2>Bot settings</h2>
+      <div class="f"><label class="w">Bot username (3-16, letters/numbers/_)<input class="inp" id="cu2" maxlength="16"></label><label>Server host<input class="inp" id="ch"></label><label>Port<input class="inp" id="cpo" inputmode="numeric"></label><label class="w">Game version<input class="inp" id="cv"></label></div>
+      <div class="acts" style="margin-top:12px"><button class="btn y" id="applyCfg">Save &amp; restart bot</button></div>
+      <div class="hint">Save karte hi bot naye naam/server se dobara join karega.</div>
+    </div>
+    <div class="card"><h2>Behaviour</h2>
+      <label class="tg">Random movement (anti-AFK)<input type="checkbox" id="tgA"></label>
+      <label class="tg">!hello ka reply<input type="checkbox" id="tgH"></label>
+      <label class="tg">Join par greeting message<input type="checkbox" id="tgG"></label>
+      <div class="hint">Ye settings PC par save hoti hain, restart ke baad bhi yaad rehti hain.</div>
+    </div>
+  </div>
+
   <div class="card" style="margin-bottom:16px">
     <h2>Schedule</h2>
     <label class="sw"><input type="checkbox" id="en" />Schedule ON</label>
@@ -151,6 +188,7 @@ function lock(msg){
 function unlock(){
   $('gate').classList.add('hide');$('app').hidden=false
   if(!src){src=new EventSource('/api/events');src.onmessage=e=>render(JSON.parse(e.data))}
+  pollAdmin()
 }
 async function login(){
   const pw=$('pw').value;if(!pw||busy)return;busy=true;$('login').disabled=true;$('err').textContent=''
@@ -227,6 +265,48 @@ $('add').onclick=()=>{if(draft.slots.length>=12)return toast('Max 12 slots');dra
 $('slots').oninput=e=>{const t=e.target;if(t.dataset.k){draft.slots[t.dataset.i][t.dataset.k]=t.value;dirty=true}}
 $('slots').onclick=e=>{const b=e.target.closest('[data-del]');if(b){draft.slots.splice(Number(b.dataset.del),1);dirty=true;slots()}}
 $('save').onclick=save
+
+let adm=null,cfgDirty=false,lastN=0,tgAt=0
+async function cmd(o){
+  try{
+    const r=await post('/api/admin/cmd',o)
+    if(r.status===403)lock('Session khatam. Dobara login karo.')
+    else if(r.status===409)toast('PC wala bot connect nahi hai')
+    else if(!r.ok)toast('Command reject hua, values check karo')
+    return r.ok
+  }catch{toast('Server tak nahi pahuncha');return false}
+}
+async function pollAdmin(){
+  if($('app').hidden)return
+  try{
+    const r=await fetch('/api/admin/data',{credentials:'same-origin',cache:'no-store'})
+    if(r.status===403)return lock('Session khatam. Dobara login karo.')
+    adm=(await r.json()).admin;renderAdmin()
+  }catch{}
+}
+function renderAdmin(){
+  if(!adm)return
+  const c=adm.chat||[],box=$('chat'),atEnd=box.scrollTop+box.clientHeight>=box.scrollHeight-30
+  box.innerHTML=c.map(m=>`<div class="${m.dir==='out'?'out':''}"><time>${esc(new Date(m.t).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}))}</time>${m.dir==='out'?'<b>You:</b> ':''}${esc(m.text)}</div>`).join('')||'<div>Abhi koi message nahi</div>'
+  if(atEnd||c.length!==lastN)box.scrollTop=box.scrollHeight;lastN=c.length
+  const s=adm.stats
+  $('stat').innerHTML=s?[['Health',s.health!=null?Math.round(s.health)+' / 20':'—'],['Food',s.food??'—'],['Position',(s.pos||[]).join(', ')],['Mode',s.mode||'—'],['Dimension',String(s.dim||'—').replace('minecraft:','')],['Ping',s.ping!=null?s.ping+' ms':'—']].map(([k,v])=>`<div><span class="l">${k}</span><b>${esc(v)}</b></div>`).join(''):'<div><span class="l">Bot</span><b>Offline</b></div>'
+  const cf=adm.config
+  if(cf){
+    if(!cfgDirty){$('cu2').value=cf.username;$('ch').value=cf.host;$('cpo').value=cf.port;$('cv').value=cf.version}
+    if(Date.now()-tgAt>4000){$('tgA').checked=!!cf.settings.activity;$('tgH').checked=!!cf.settings.helloReply;$('tgG').checked=!!cf.settings.greet}
+  }
+}
+async function send(){const t=$('msg').value.trim();if(!t)return;$('msg').value='';if(await cmd({type:'chat',text:t}))setTimeout(pollAdmin,800)}
+$('sendBtn').onclick=send;$('msg').onkeydown=e=>{if(e.key==='Enter')send()}
+document.querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>cmd({type:'move',dir:b.dataset.mv,ms:600}))
+$('respawn').onclick=()=>cmd({type:'respawn'})
+;['cu2','ch','cpo','cv'].forEach(i=>$(i).oninput=()=>{cfgDirty=true})
+$('applyCfg').onclick=()=>ask('Bot restart hoga','Naye username/server ke saath bot dobara join karega.',async()=>{
+  if(await cmd({type:'config',data:{username:$('cu2').value.trim(),host:$('ch').value.trim(),port:Number($('cpo').value),version:$('cv').value.trim()}})){cfgDirty=false;toast('Config save, bot restart ho raha hai…')}
+})
+;[['tgA','activity'],['tgH','helloReply'],['tgG','greet']].forEach(([i,k])=>$(i).onchange=e=>{tgAt=Date.now();cmd({type:'toggle',key:k,value:e.target.checked})})
+setInterval(pollAdmin,2000)
 
 fetch('/api/admin/session',{credentials:'same-origin',cache:'no-store'}).then(r=>r.json()).then(j=>j.ok?unlock():$('pw').focus()).catch(()=>{})
 </script>
