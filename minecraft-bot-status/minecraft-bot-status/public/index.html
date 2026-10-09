@@ -8,64 +8,59 @@
 <style>
 :root{color-scheme:dark;--bg:#121212;--card:#181818;--hover:#2a2a2a;--muted:#b3b3b3;--dim:#727272;--green:#1ed760;--red:#f3727f;--yellow:#ffa42b;--blue:#509bf5;--accent:var(--yellow)}
 *{box-sizing:border-box}
-body.online{--accent:var(--green)}body.offline,body.error{--accent:var(--red)}
-body.stopped{--accent:#727272}
+body.online{--accent:var(--green)}body.offline,body.error{--accent:var(--red)}body.stopped{--accent:#727272}
 html,body{height:100%}
 body{margin:0;font-family:Figtree,system-ui,sans-serif;color:#fff;background:#000;display:grid;grid-template-columns:260px 1fr;grid-template-rows:1fr 88px;grid-template-areas:"side main" "player player";gap:8px;padding:8px;overflow:hidden}
-button{font-family:inherit;color:inherit}
+button,a{font-family:inherit;color:inherit}a{text-decoration:none}
 .i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .px{image-rendering:pixelated;shape-rendering:crispEdges;flex:none}
-.panel{background:var(--bg);border-radius:10px}
+.panel{background:var(--bg);border-radius:12px;border:1px solid #ffffff0f}
 .side{grid-area:side;display:flex;flex-direction:column;gap:8px;min-height:0}
 .nav{padding:18px 8px 12px}
 .logo{display:flex;align-items:center;gap:12px;padding:0 14px 16px;font-weight:900;font-size:17px;letter-spacing:-.02em}
 .logo svg{width:34px;height:34px;border-radius:6px}
-.nav a{display:flex;align-items:center;gap:16px;padding:11px 14px;color:var(--muted);font-weight:700;cursor:pointer}
-.nav a:hover{color:#fff}
+.nav a{display:flex;align-items:center;gap:16px;padding:11px 14px;color:var(--muted);font-weight:700;cursor:pointer;border-radius:8px;transition:.15s}
+.nav a:hover,.nav a.on{color:#fff;background:#ffffff12}
 .lib{flex:1;padding:16px 10px;overflow:auto}
 .lib h3{margin:0 6px 12px;color:var(--muted);font-size:15px}
-.item{display:flex;align-items:center;gap:12px;padding:8px;border-radius:6px;cursor:pointer;border:0;background:none;width:100%;text-align:left}
-.item:hover{background:var(--hover)}
-.item[hidden]{display:none}
-.item .art{width:44px;height:44px;border-radius:5px;display:grid;place-items:center;background:#282828}
+.item{display:flex;align-items:center;gap:12px;padding:8px;border-radius:8px;cursor:pointer;border:0;background:none;width:100%;text-align:left;transition:.15s}
+.item:hover{background:var(--hover);transform:translateX(3px)}
+.item .art{width:44px;height:44px;border-radius:6px;display:grid;place-items:center;background:#282828}
 .item b{display:block;font-size:15px}.item span{font-size:13px;color:var(--muted)}
-.item.red .art{color:var(--red)}
 
-.main{grid-area:main;overflow:auto;border-radius:10px;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 50%,#000) 0,var(--bg) 380px) var(--bg);scrollbar-width:thin;scrollbar-color:#555 transparent}
-.top{position:sticky;top:0;z-index:5;display:flex;justify-content:flex-end;gap:8px;padding:14px 26px;backdrop-filter:blur(8px)}
-.pill{display:inline-flex;align-items:center;gap:8px;background:#0009;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700}
+.main{grid-area:main;overflow:auto;border-radius:12px;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 50%,#000) 0,var(--bg) 380px) var(--bg);scrollbar-width:thin;scrollbar-color:#555 transparent;scroll-behavior:smooth;transition:background .6s}
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:14px 26px;backdrop-filter:blur(10px)}
+.chips{display:none;gap:6px;overflow-x:auto;margin-right:auto;scrollbar-width:none}
+.pill{display:inline-flex;align-items:center;gap:8px;background:#0009;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;white-space:nowrap}
 .dot{width:9px;height:9px;border-radius:50%;background:var(--dim)}
-.pill.ok .dot{background:var(--green)}
-.hero{display:flex;align-items:flex-end;gap:24px;padding:10px 26px 24px}
-.cover{width:220px;height:220px;flex:none;border-radius:6px;box-shadow:0 8px 40px #000a;background:linear-gradient(135deg,#2c5a1f,#1ed760 120%);position:relative;overflow:hidden;display:grid;place-items:center}
+.pill.ok .dot{background:var(--green);animation:ping 1.8s infinite}
+@keyframes ping{0%{box-shadow:0 0 0 0 #1ed76099}100%{box-shadow:0 0 0 10px #1ed76000}}
+.hero{display:flex;align-items:flex-end;gap:24px;padding:10px 26px 24px;position:relative}
+.cover{width:220px;height:220px;flex:none;border-radius:10px;box-shadow:0 8px 40px #000a;background:linear-gradient(135deg,#2c5a1f,#1ed760 120%);display:grid;place-items:center;position:relative}
+body.online .cover::after{content:"";position:absolute;inset:-6px;border-radius:14px;border:2px solid var(--green);animation:ring 2.4s ease-out infinite}
+@keyframes ring{from{opacity:.8;transform:scale(.97)}to{opacity:0;transform:scale(1.08)}}
 .cover svg.px{width:110px;height:110px;animation:bob 4s ease-in-out infinite}
 @keyframes bob{50%{transform:translateY(-8px)}}
-.cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
 .hero .t{min-width:0}.type{font-size:14px;font-weight:700}
 h1{margin:6px 0 14px;font-size:clamp(34px,7vw,84px);line-height:1;font-weight:900;letter-spacing:-.045em}
-.sub{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;font-weight:600}
-.sep{opacity:.6}
+.sub{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;font-weight:600}.sep{opacity:.6}
 .bar{display:flex;align-items:center;gap:16px;padding:6px 26px 18px;flex-wrap:wrap}
-.bigplay{width:56px;height:56px;border-radius:50%;border:0;background:var(--green);color:#000;display:grid;place-items:center;cursor:pointer}
-.bigplay:hover{filter:brightness(1.1)}.bigplay .i{width:26px;height:26px;stroke-width:2.4}
-.bigplay.spin .i{animation:spin .8s linear}@keyframes spin{to{transform:rotate(360deg)}}
-.ib{background:none;border:0;color:var(--muted);cursor:pointer;display:grid;place-items:center;padding:6px;border-radius:50%;position:relative}
-.ib:hover{color:#fff}.ib.on{color:var(--green)}
-.ib.on::after{content:"";position:absolute;bottom:-2px;left:50%;width:4px;height:4px;border-radius:50%;background:var(--green);transform:translateX(-50%)}
+.bigplay{width:56px;height:56px;border-radius:50%;border:0;background:var(--green);color:#000;display:grid;place-items:center;cursor:pointer;box-shadow:0 6px 20px #1ed76066;transition:.2s}
+.bigplay:hover{transform:scale(1.08)}.bigplay .i{width:26px;height:26px;stroke-width:2.4}
+.spin .i{animation:spin .8s linear}@keyframes spin{to{transform:rotate(360deg)}}
+.ib{background:none;border:0;color:var(--muted);cursor:pointer;display:grid;place-items:center;padding:6px;border-radius:50%;position:relative;transition:.15s}
+.ib:hover{color:#fff;transform:scale(1.12)}.ib.on{color:var(--green)}
 .bar .ib .i{width:28px;height:28px}
-.rbtn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--red);background:#f3727f1f;color:var(--red);font-weight:800;font-size:14px;padding:10px 18px;border-radius:999px;cursor:pointer}
-.rbtn:hover{background:var(--red);color:#000}.rbtn:disabled{opacity:.5;cursor:wait}
-.rbtn .i{width:18px;height:18px}
-.sbtn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--green);background:#1ed7601f;color:var(--green);font-weight:800;font-size:14px;padding:10px 18px;border-radius:999px;cursor:pointer}
-.sbtn:hover{background:var(--green);color:#000}.sbtn:disabled{opacity:.5;cursor:wait}
-.sbtn .i{width:18px;height:18px}
-.rbtn[hidden],.sbtn[hidden]{display:none}
+.admin-btn{display:inline-flex;align-items:center;gap:8px;border:1px solid #ffffff44;border-radius:999px;padding:10px 18px;font-weight:800;font-size:14px;transition:.2s}
+.admin-btn:hover{background:#fff;color:#000}.admin-btn .i{width:18px;height:18px}
 
-.sec{padding:0 26px 26px}.sec>h2{margin:0 0 14px;font-size:24px;font-weight:800;letter-spacing:-.02em}
+.sec{padding:0 26px 26px}.sec>h2{margin:0 0 14px;font-size:24px;font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:12px}
+.sec>h2::before{content:"";width:6px;height:24px;border-radius:2px;background:var(--accent);flex:none}
+.rv{opacity:0;transform:translateY(24px);transition:opacity .6s,transform .6s}.rv.in{opacity:1;transform:none}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px}
-.card{background:var(--card);border-radius:8px;padding:16px;position:relative}
-.card:hover{background:var(--hover)}
-.card .ico{width:52px;height:52px;border-radius:8px;display:grid;place-items:center;background:#282828;margin-bottom:14px}
+.card{background:var(--card);border-radius:10px;padding:16px;position:relative;border:1px solid #ffffff0d;transition:background .2s,transform .2s,border-color .2s}
+.card:hover{background:var(--hover);transform:translateY(-4px);border-color:#ffffff22}
+.card .ico{width:52px;height:52px;border-radius:10px;display:grid;place-items:center;background:#282828;margin-bottom:14px}
 .card .ico .i{color:var(--green)}.card .ico svg.px{width:34px;height:34px}
 .card .l{font-size:13px;color:var(--muted);font-weight:600}
 .card .v{margin-top:4px;font-size:17px;font-weight:800;word-break:break-word}
@@ -74,40 +69,28 @@ h1{margin:6px 0 14px;font-size:clamp(34px,7vw,84px);line-height:1;font-weight:90
 .small{font-size:12px;color:var(--dim);font-weight:600}
 .health{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
 .timeline{display:flex;gap:3px;height:56px;align-items:flex-end;margin:12px 0 8px}
-.timeline i{flex:1;min-width:3px;border-radius:2px;height:100%;background:var(--green)}
+.timeline i{flex:1;min-width:3px;border-radius:2px;height:100%;background:var(--green);animation:grow .5s both}
+@keyframes grow{from{transform:scaleY(0);transform-origin:bottom}}
 .timeline i.offline,.timeline i.error{background:var(--red);height:45%}.timeline i.stopped{background:#727272;height:30%}.timeline i.connecting,.timeline i.starting{background:var(--yellow);height:70%}
 .counts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.counts div{background:#0e0e0e;border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:12px}
+.counts div{background:#0e0e0e;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px}
 .counts b{font-size:22px;font-weight:900;line-height:1;display:block}.counts span{font-size:12px;color:var(--muted);font-weight:600}
 .counts .success .i{color:var(--green)}.counts .info .i{color:var(--blue)}.counts .warn .i{color:var(--yellow)}.counts .error .i{color:var(--red)}
-
-/* Schedule */
-.sch-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}
-.sw{display:inline-flex;align-items:center;gap:10px;font-weight:800;font-size:15px;cursor:pointer}
-.sw input{width:20px;height:20px;accent-color:var(--green);cursor:pointer}
-.sch-next{font-size:14px;font-weight:700;color:var(--green);margin:8px 0 2px}
-.sch-next.off{color:var(--muted)}
-.slot{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;background:var(--card);padding:12px 14px;border-radius:8px;margin-bottom:8px}
-.slot label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:700}
-.slot input{background:#0e0e0e;border:1px solid #333;color:#fff;border-radius:6px;padding:8px 10px;font:700 15px Figtree,sans-serif;color-scheme:dark}
-.slot .ib .i{width:24px;height:24px}.slot .ib:hover{color:var(--red)}
-.sch-act{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-.gbtn{border:1px solid #ffffff44;background:none;color:#fff;font-weight:800;font-size:14px;padding:10px 18px;border-radius:999px;cursor:pointer}
-.gbtn:hover{background:#ffffff1a}
+.sch-next{font-size:14px;font-weight:700;color:var(--green);margin:6px 0 12px}.sch-next.off{color:var(--muted)}
+.slots{display:flex;gap:8px;flex-wrap:wrap}.slotv{background:var(--card);border:1px solid #ffffff12;border-radius:999px;padding:8px 16px;font-weight:800;font-size:14px}
 
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
-.chip{border:0;border-radius:999px;padding:7px 14px;background:#ffffff1a;font-size:13px;font-weight:600;cursor:pointer}
+.chip{border:0;border-radius:999px;padding:7px 14px;background:#ffffff1a;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:.15s}
 .chip.on{background:#fff;color:#000}
 .search{display:flex;align-items:center;gap:8px;background:#ffffff1a;border-radius:999px;padding:0 14px;margin-left:auto;min-width:200px}
 .search .i{width:18px;height:18px;color:var(--muted)}
 .search input{flex:1;background:none;border:0;color:#fff;padding:8px 0;font:600 13px Figtree,sans-serif;outline:0}
 .rows{max-height:460px;overflow:auto;scrollbar-width:thin;scrollbar-color:#555 transparent}
-.row{display:grid;grid-template-columns:40px 1fr 90px 100px;gap:14px;align-items:center;padding:8px 14px;border-radius:5px;cursor:pointer}
-.row:hover{background:#ffffff1a}
-.row .n{color:var(--muted);text-align:center}
-.row .e{display:flex;align-items:center;gap:12px;min-width:0}
-.row .ev{width:40px;height:40px;border-radius:4px;background:#282828;display:grid;place-items:center;flex:none}
-.row .ev .i{width:20px;height:20px}
+.row{display:grid;grid-template-columns:40px 1fr 90px 100px;gap:14px;align-items:center;padding:8px 14px;border-radius:8px;cursor:pointer;border:1px solid transparent;animation:slide .35s both}
+@keyframes slide{from{opacity:0;transform:translateX(-12px)}}
+.row:hover{background:#ffffff14;border-color:#ffffff14}
+.row .n{color:var(--muted);text-align:center}.row .e{display:flex;align-items:center;gap:12px;min-width:0}
+.row .ev{width:40px;height:40px;border-radius:6px;background:#282828;display:grid;place-items:center;flex:none}.row .ev .i{width:20px;height:20px}
 .row b{display:block;font-weight:600;font-size:15px;word-break:break-word}.row .tt span{font-size:13px;color:var(--muted)}
 .row .det{display:none;grid-column:2/-1;padding:10px 12px;background:#0e0e0e;border-radius:6px;font:12px/1.5 ui-monospace,Menlo,monospace;color:var(--muted);white-space:pre-wrap;word-break:break-word}
 .row.open .det{display:block}
@@ -115,153 +98,105 @@ h1{margin:6px 0 14px;font-size:clamp(34px,7vw,84px);line-height:1;font-weight:90
 .row .lv,.row .tm{font-size:13px;color:var(--muted);text-transform:capitalize}.row .tm{text-align:right;text-transform:none}
 .empty{text-align:center;color:var(--muted);padding:40px 10px;font-weight:600}
 
-.player{grid-area:player;display:grid;grid-template-columns:1fr 1.4fr 1fr;align-items:center;padding:0 14px;gap:16px;border-radius:0;background:#000}
+.player{grid-area:player;display:grid;grid-template-columns:1fr 1.4fr 1fr;align-items:center;padding:0 14px;gap:16px;background:#000}
 .np{display:flex;align-items:center;gap:14px;min-width:0}
-.np .c{width:56px;height:56px;border-radius:4px;overflow:hidden;background:#282828;display:grid;place-items:center;flex:none;position:relative}
-.np .c svg.px{width:34px;height:34px}.np .c img{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
+.np .c{width:56px;height:56px;border-radius:6px;background:linear-gradient(135deg,#2c5a1f,#1ed760 120%);display:grid;place-items:center;flex:none}.np .c svg.px{width:34px;height:34px}
 .np b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.np span{font-size:12px;color:var(--muted);font-weight:600}
-.ctrl{display:flex;flex-direction:column;align-items:center;gap:8px}
-.btns{display:flex;align-items:center;gap:20px}
-.wbtn{width:34px;height:34px;border-radius:50%;background:#fff;color:#000;border:0;display:grid;place-items:center;cursor:pointer}
-.wbtn .i{width:18px;height:18px;stroke-width:2.6}.wbtn.spin .i{animation:spin .8s linear}
+.ctrl{display:flex;flex-direction:column;align-items:center;gap:8px}.btns{display:flex;align-items:center;gap:20px}
+.wbtn{width:34px;height:34px;border-radius:50%;background:#fff;color:#000;border:0;display:grid;place-items:center;cursor:pointer;transition:.2s}.wbtn:hover{transform:scale(1.1)}
+.wbtn .i{width:18px;height:18px;stroke-width:2.6}
 .prog{display:flex;align-items:center;gap:10px;width:100%;max-width:520px;font-size:11px;color:var(--muted);font-weight:600}
 .track{flex:1;height:4px;border-radius:2px;background:#4d4d4d;overflow:hidden}.fill{height:100%;width:0;background:var(--green)}
 .right{display:flex;align-items:center;justify-content:flex-end;gap:14px;color:var(--muted);font-size:13px;font-weight:600}
 .upb{display:flex;align-items:center;gap:8px;background:#ffffff14;padding:6px 12px;border-radius:999px;color:#fff;font-size:12px}
 .upb .i{width:16px;height:16px;color:var(--green)}.upb b{color:var(--green);font-weight:800}
 .lk{display:flex;align-items:center;gap:8px}.lk .i{width:18px;height:18px}
-
-.toast{position:fixed;left:50%;bottom:104px;transform:translate(-50%,40px);opacity:0;background:#fff;color:#000;font-weight:700;font-size:14px;padding:12px 20px;border-radius:6px;transition:.3s;z-index:20;pointer-events:none}
+.toast{position:fixed;left:50%;bottom:104px;transform:translate(-50%,40px);opacity:0;background:#fff;color:#000;font-weight:700;font-size:14px;padding:12px 20px;border-radius:8px;transition:.3s;z-index:20;pointer-events:none}
 .toast.show{transform:translate(-50%,0);opacity:1}
 
-/* Minecraft popup */
 .gate{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:20px;background:linear-gradient(#000a,#000a),repeating-conic-gradient(#3b2a1a 0 25%,#4a3522 0 50%) 0 0/48px 48px;transition:opacity .5s}
 .gate.hide{opacity:0;pointer-events:none}
-.mc-box{width:min(440px,100%);text-align:center;padding:26px 22px;background:#c6c6c6;color:#3f3f3f;border:4px solid;border-color:#fff #555 #555 #fff;box-shadow:0 0 0 4px #000,0 20px 60px #000;font-family:"Press Start 2P",monospace}
+.mc-box{width:min(440px,100%);text-align:center;padding:26px 22px;background:#c6c6c6;color:#3f3f3f;border:4px solid;border-color:#fff #555 #555 #fff;box-shadow:0 0 0 4px #000,0 20px 60px #000;font-family:"Press Start 2P",monospace;animation:pop .5s}
+@keyframes pop{from{transform:scale(.85);opacity:0}}
 .mc-box svg.px{width:88px;height:88px;animation:bob 3s ease-in-out infinite}
-.mc-box h2{margin:16px 0 12px;font-size:15px;line-height:1.5;color:#2b2b2b}
-.mc-box p{margin:0;font-size:10px;line-height:1.9;color:#555}
+.mc-box h2{margin:16px 0 12px;font-size:15px;line-height:1.5;color:#2b2b2b}.mc-box p{margin:0;font-size:10px;line-height:1.9;color:#555}
 .mc-btn{margin-top:22px;width:100%;padding:16px;font:12px "Press Start 2P",monospace;color:#fff;text-shadow:2px 2px #3f3f3f;background:#7d7d7d;border:3px solid;border-color:#bdbdbd #3a3a3a #3a3a3a #bdbdbd;outline:3px solid #000;cursor:pointer}
 .mc-btn:hover,.mc-btn:active{background:#5d8f3a;border-color:#9bd36b #2d4a1a #2d4a1a #9bd36b}
-
-/* ---- Professional polish ---- */
 :focus-visible{outline:2px solid var(--green);outline-offset:2px}
-.panel{border:1px solid #ffffff0f}
-.card{border:1px solid #ffffff0d;transition:background .2s,transform .2s,border-color .2s}
-.card:hover{transform:translateY(-3px);border-color:#ffffff22}
-.sec>h2{display:flex;align-items:center;gap:12px}
-.sec>h2::before{content:"";width:6px;height:24px;border-radius:2px;background:var(--accent);flex:none}
-.nav a{border-radius:8px;transition:background .15s,color .15s}
-.nav a:hover{background:#ffffff0f}
-.row{border:1px solid transparent}.row:hover{border-color:#ffffff14}
-.bigplay{box-shadow:0 6px 20px color-mix(in srgb,var(--green) 40%,transparent)}
-.cover{outline:1px solid #ffffff1f;outline-offset:-1px}
 
-/* ---- Leaderboard ---- */
-.lb-label{margin:22px 0 12px;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.02em}
-.lb-label:first-of-type{margin-top:0}
-.ava{position:relative;flex:none;border-radius:8px;overflow:hidden;background:#282828;image-rendering:pixelated}
-.ava img{display:block;width:100%;height:100%;image-rendering:pixelated}
-.chipx{display:inline-flex;align-items:center;gap:6px;font:9px/1 "Press Start 2P",monospace;padding:7px 9px;border-radius:4px;color:#000}
-
-/* Owner */
-.owner{position:relative;display:flex;align-items:center;gap:20px;padding:22px 24px;border-radius:12px;overflow:hidden;
-  background:linear-gradient(110deg,#3a2c0a,#1c1a12 55%,#181818);border:1px solid #ffd54a55;box-shadow:0 0 0 1px #000,0 10px 40px #ffd54a1a}
+/* Leaderboard */
+.lb-label{margin:22px 0 12px;font-size:13px;font-weight:700;color:var(--muted)}.lb-label:first-of-type{margin-top:0}
+.ava{position:relative;flex:none;border-radius:10px;overflow:hidden;background:#282828}.ava img{display:block;width:100%;height:100%;image-rendering:pixelated}
+.chipx{display:inline-flex;font:9px/1 "Press Start 2P",monospace;padding:7px 9px;border-radius:4px;color:#000;background:#ffd54a}
+.owner{position:relative;display:flex;align-items:center;gap:20px;padding:22px 24px;border-radius:14px;overflow:hidden;background:linear-gradient(110deg,#3a2c0a,#1c1a12 55%,#181818);border:1px solid #ffd54a55;box-shadow:0 10px 40px #ffd54a1a}
 .owner::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,#ffe9a533 50%,transparent 60%);transform:translateX(-120%);animation:shine 5s ease-in-out infinite}
 @keyframes shine{40%,100%{transform:translateX(120%)}}
-.owner .ava{width:84px;height:84px;border:3px solid #ffd54a;box-shadow:0 0 0 3px #000,0 0 24px #ffd54a55}
-.owner .crown{position:absolute;left:62px;top:10px;width:34px;height:34px;filter:drop-shadow(0 3px 0 #000);animation:bob 3s ease-in-out infinite;z-index:2}
+.owner .ava{width:84px;height:84px;border:3px solid #ffd54a;box-shadow:0 0 24px #ffd54a55}
+.owner .crown{position:absolute;left:62px;top:10px;width:34px;height:34px;animation:bob 3s ease-in-out infinite;z-index:2}
 .owner h3{margin:8px 0 0;font-size:clamp(22px,4vw,32px);font-weight:900;letter-spacing:-.03em;color:#ffe08a}
-.owner .chipx{background:#ffd54a}
 .owner p{margin:8px 0 0;font-size:13px;color:#cdbd8a;font-weight:600}
-
-/* Podium */
 .podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:14px;align-items:end}
-.pod{position:relative;text-align:center;padding:20px 14px 0;border-radius:12px 12px 0 0;background:var(--card);border:1px solid #ffffff12;border-bottom:0;overflow:hidden}
-.pod .ava{width:72px;height:72px;margin:0 auto 12px;border:3px solid var(--mc);box-shadow:0 0 0 3px #000}
-.pod b{display:block;font-size:17px;font-weight:800;word-break:break-word}
-.pod span.t{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-top:2px}
-.pod .step{margin:16px -14px 0;height:var(--h);display:grid;place-items:center;font:20px "Press Start 2P",monospace;color:#000;text-shadow:2px 2px 0 #fff4;
-  background:
-    linear-gradient(#fff3,#fff0 40%,#0003) ,
-    repeating-linear-gradient(90deg,transparent 0 31px,#0002 31px 32px),
-    repeating-linear-gradient(0deg,transparent 0 31px,#0002 31px 32px),var(--mc);
-  border-top:3px solid #fff5}
-.pod.p1{--mc:#ffd54a;--h:104px;background:linear-gradient(#2a2410,var(--card))}
-.pod.p2{--mc:#d4dbe3;--h:78px}
-.pod.p3{--mc:#d98a52;--h:58px}
-.pod.p1 .ava{width:88px;height:88px;box-shadow:0 0 0 3px #000,0 0 26px #ffd54a66}
-.pod .crown{position:absolute;top:8px;left:50%;width:28px;height:28px;transform:translateX(-50%);animation:bob 3s ease-in-out infinite}
-.pod.p1 .ava{margin-top:22px}
+.pod{position:relative;text-align:center;padding:20px 14px 0;border-radius:14px 14px 0 0;background:var(--card);border:1px solid #ffffff12;border-bottom:0;overflow:hidden}
+.pod .ava{width:72px;height:72px;margin:0 auto 12px;border:3px solid var(--mc);transition:.3s}.pod:hover .ava{transform:rotate(-4deg) scale(1.08)}
+.pod b{display:block;font-size:17px;font-weight:800;word-break:break-word}.pod span.t{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-top:2px}
+.pod .step{margin:16px -14px 0;height:var(--h);display:grid;place-items:center;font:20px "Press Start 2P",monospace;color:#000;background:linear-gradient(#fff3,#fff0 40%,#0003),repeating-linear-gradient(90deg,transparent 0 31px,#0002 31px 32px),var(--mc);border-top:3px solid #fff5}
+.pod.p1{--mc:#ffd54a;--h:104px;background:linear-gradient(#2a2410,var(--card))}.pod.p2{--mc:#d4dbe3;--h:78px}.pod.p3{--mc:#d98a52;--h:58px}
+.pod.p1 .ava{width:88px;height:88px;margin-top:22px;box-shadow:0 0 26px #ffd54a66}
+.pod .crown{position:absolute;top:8px;left:50%;width:28px;height:28px;margin-left:-14px;animation:bob 3s ease-in-out infinite}
 
-/* Cutest player */
-.cutie{position:relative;display:flex;align-items:center;gap:22px;padding:24px;border-radius:22px;overflow:hidden;color:#6b2147;
-  background:radial-gradient(circle at 12% 20%,#fff0f7,transparent 45%),linear-gradient(135deg,#ffc2dc,#ffd9e8 55%,#ffe8c9);
-  border:2px dashed #ff8fbf;box-shadow:0 10px 36px #ff8fbf33}
-.cutie .ava{width:96px;height:96px;border-radius:50%;border:5px solid #fff;box-shadow:0 0 0 3px #ff8fbf,0 8px 20px #ff6fa955;animation:wob 3.5s ease-in-out infinite}
-@keyframes wob{50%{transform:rotate(-4deg) translateY(-4px)}}
-.cutie small{display:inline-block;font-size:12px;font-weight:800;background:#fff;color:#e0568f;padding:5px 12px;border-radius:999px}
-.cutie h3{margin:10px 0 4px;font-size:clamp(24px,4vw,34px);font-weight:900;letter-spacing:-.03em;color:#a3265f}
+/* Cutest player: pookie */
+.cutie{position:relative;display:flex;align-items:center;gap:24px;padding:26px 28px;border-radius:26px;overflow:hidden;color:#6b2147;background:radial-gradient(circle at 10% 15%,#fff,transparent 40%),radial-gradient(circle at 90% 90%,#ffd6f0,transparent 45%),linear-gradient(135deg,#ffb8d9,#ffd9ea 50%,#ffe9d2);border:3px dotted #ff8fbf;box-shadow:0 14px 44px #ff8fbf44;transition:transform .3s}
+.cutie:hover{transform:scale(1.015) rotate(-.4deg)}
+.cutie .gal{position:relative;flex:none;width:132px;height:132px;display:grid;place-items:center;border-radius:50%;background:#fff;box-shadow:0 0 0 5px #ff8fbf,0 0 0 9px #fff,0 10px 26px #ff6fa966;animation:wob 3.5s ease-in-out infinite}
+.cutie .gal svg{width:96px;height:104px}
+@keyframes wob{50%{transform:rotate(-5deg) translateY(-6px)}}
+.cutie .tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;background:#fff;color:#e0568f;padding:6px 14px;border-radius:999px;box-shadow:0 3px 0 #ffb8d9}
+.cutie h3{margin:12px 0 6px;font-size:clamp(26px,4.5vw,38px);font-weight:900;letter-spacing:-.03em;color:#a3265f}
 .cutie p{margin:0;font-size:14px;font-weight:700}
-.cutie .hh{position:absolute;bottom:-14px;width:22px;height:22px;opacity:0;animation:rise 6s linear infinite}
-.cutie .hh:nth-of-type(1){left:50%}.cutie .hh:nth-of-type(2){left:64%;animation-delay:1.6s}
-.cutie .hh:nth-of-type(3){left:78%;animation-delay:3.1s}.cutie .hh:nth-of-type(4){left:91%;animation-delay:4.4s}
-@keyframes rise{10%{opacity:.9}100%{transform:translateY(-190px) rotate(18deg);opacity:0}}
-.cutie .ck{margin-left:auto;width:64px;height:64px;flex:none}
+.cutie .meter{margin-top:12px;display:flex;align-items:center;gap:10px;font-size:12px;font-weight:800;color:#a3265f}
+.cutie .meter i{display:block;height:10px;flex:1;max-width:200px;border-radius:99px;background:#fff9;overflow:hidden}.cutie .meter i::after{content:"";display:block;height:100%;width:100%;border-radius:99px;background:repeating-linear-gradient(45deg,#ff5fa2 0 8px,#ff8fbf 8px 16px);animation:fillup 2s ease-out both}
+@keyframes fillup{from{width:0}}
+.cutie .fl{position:absolute;pointer-events:none;opacity:0;font-size:20px;bottom:-24px;animation:rise 6s linear infinite}
+.cutie .fl:nth-of-type(1){left:42%}.cutie .fl:nth-of-type(2){left:55%;animation-delay:1.2s;font-size:16px}.cutie .fl:nth-of-type(3){left:68%;animation-delay:2.4s}.cutie .fl:nth-of-type(4){left:80%;animation-delay:3.6s;font-size:14px}.cutie .fl:nth-of-type(5){left:92%;animation-delay:4.8s}.cutie .fl:nth-of-type(6){left:8%;animation-delay:3s;font-size:15px}
+@keyframes rise{10%{opacity:.95}100%{transform:translateY(-230px) rotate(20deg);opacity:0}}
+.cutie .tw{position:absolute;top:14px;right:22px;font-size:26px;animation:tw 2s ease-in-out infinite}
+@keyframes tw{50%{transform:scale(1.35) rotate(18deg);opacity:.6}}
 
-@media(max-width:900px){
-  .owner{flex-direction:column;text-align:center;padding:24px 16px}.owner .crown{left:50%;margin-left:-17px;top:8px}
-  .owner .ava{margin-top:14px}
-  .podium{grid-template-columns:1fr;gap:10px}
-  .pod,.pod.p1{display:flex;align-items:center;gap:14px;text-align:left;padding:12px 14px;border-radius:12px;border-bottom:1px solid #ffffff12}
-  .pod .ava,.pod.p1 .ava{width:56px;height:56px;margin:0}.pod.p1 .ava{margin-top:0}.pod .crown{display:none}
-  .pod .step{order:3;margin:0 0 0 auto;height:44px;width:60px;font-size:13px;border-radius:6px;border-top:0}
-  .pod.p1{order:1}.pod.p2{order:2}.pod.p3{order:3}
-  .cutie{flex-direction:column;text-align:center;padding:24px 16px}.cutie .ck{display:none}
-}
-
-/* ===== PHONE DESIGN ===== */
 @media(max-width:900px){
   html,body{height:100dvh}
   body{grid-template-columns:1fr;grid-template-rows:1fr auto;grid-template-areas:"main" "player";gap:0;padding:0}
-  .side,.prog,#pCopy,.row .n,.row .lv{display:none}
+  .side,.prog,#pCopy,.row .n,.row .lv,.top>.pill:last-child{display:none}
   .main{border-radius:0}
-  .top{justify-content:center;padding:12px 10px;padding-top:calc(12px + env(safe-area-inset-top))}
-  .pill{font-size:12px;padding:6px 11px}
+  .top{padding:10px 12px;padding-top:calc(10px + env(safe-area-inset-top))}
+  .chips{display:flex}.chips .chip{padding:7px 12px}
   .hero{flex-direction:column;align-items:center;text-align:center;gap:14px;padding:6px 16px 14px}
-  .cover{width:170px;height:170px}.cover svg.px{width:90px;height:90px}
-  h1{font-size:clamp(28px,9vw,42px);margin:8px 0 12px}
-  .sub{justify-content:center;font-size:13px}
-  .bar{justify-content:center;gap:12px;padding:0 14px 16px}
-  .bigplay{width:52px;height:52px}
-  .sec{padding:0 14px 22px}.sec>h2{font-size:20px;margin-bottom:12px}
-  .cards{grid-template-columns:1fr 1fr;gap:10px}
-  .card{padding:12px;border-radius:12px}
+  .cover{width:160px;height:160px}.cover svg.px{width:84px;height:84px}
+  h1{font-size:clamp(28px,9vw,42px);margin:8px 0 12px}.sub{justify-content:center;font-size:13px}
+  .bar{justify-content:center;gap:12px;padding:0 14px 16px}.bigplay{width:52px;height:52px}
+  .sec{padding:0 14px 22px}.sec>h2{font-size:20px}
+  .cards{grid-template-columns:1fr 1fr;gap:10px}.card{padding:12px;border-radius:14px}
   .card .ico{width:38px;height:38px;margin-bottom:10px}.card .ico .i{width:20px;height:20px}.card .ico svg.px{width:26px;height:26px}
-  .card .v{font-size:16px}
-  .cards .card:nth-child(3),.cards .card:last-child{grid-column:1/-1}
-  .card .cp{opacity:1;width:34px;height:34px}
+  .card .v{font-size:16px}.cards .card:nth-child(3),.cards .card:last-child{grid-column:1/-1}.card .cp{opacity:1;width:34px;height:34px}
   .health{grid-template-columns:1fr}
-  .toolbar{overflow-x:auto;flex-wrap:nowrap}.chip{white-space:nowrap}
-  .search{margin-left:0;min-width:180px}
-  .rows{max-height:none}
-  .row{display:block;background:var(--card);border-radius:12px;padding:12px 14px;margin-bottom:8px}
-  .row .tm{display:block;text-align:left;margin-top:6px;font-size:12px}
-  .row .det{margin-top:8px}
-  .player{grid-template-columns:1fr auto;gap:10px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));border-radius:18px 18px 0 0;border-top:1px solid #ffffff1f}
-  .np .c{width:44px;height:44px}
-  .ctrl{flex-direction:row}.btns{gap:14px}
-  .right{grid-column:1/-1;justify-content:space-between}
-  .toast{bottom:150px;max-width:90vw;text-align:center}
-  .mc-box h2{font-size:13px}
+  .toolbar{overflow-x:auto;flex-wrap:nowrap}.search{margin-left:0;min-width:180px}
+  .rows{max-height:none}.row{display:block;background:var(--card);border-radius:14px;padding:12px 14px;margin-bottom:8px}
+  .row .tm{display:block;text-align:left;margin-top:6px;font-size:12px}.row .det{margin-top:8px}
+  .owner{flex-direction:column;text-align:center;padding:24px 16px}.owner .crown{left:50%;margin-left:-17px;top:8px}.owner .ava{margin-top:14px}
+  .podium{grid-template-columns:1fr;gap:10px}
+  .pod,.pod.p1{display:flex;align-items:center;gap:14px;text-align:left;padding:12px 14px;border-radius:14px;border-bottom:1px solid #ffffff12}
+  .pod .ava,.pod.p1 .ava{width:56px;height:56px;margin:0}.pod .crown{display:none}
+  .pod .step{order:3;margin:0 0 0 auto;height:44px;width:60px;font-size:13px;border-radius:8px;border-top:0}
+  .pod.p1{order:1}.pod.p2{order:2}.pod.p3{order:3}
+  .cutie{flex-direction:column;text-align:center;padding:26px 16px}.cutie .meter{justify-content:center}
+  .player{grid-template-columns:1fr auto;gap:10px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));border-radius:20px 20px 0 0;border-top:1px solid #ffffff1f}
+  .np .c{width:44px;height:44px}.ctrl{flex-direction:row}.btns{gap:14px}.right{grid-column:1/-1;justify-content:space-between}
+  .toast{bottom:150px;max-width:90vw;text-align:center}.mc-box h2{font-size:13px}
 }
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}}
 </style>
 </head>
 <body>
-
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-<defs>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
 <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
 <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></symbol>
 <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></symbol>
@@ -278,42 +213,41 @@ h1{margin:6px 0 14px;font-size:clamp(34px,7vw,84px);line-height:1;font-weight:90
 <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M2 8.8a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16.2a5 5 0 0 1 6 0M12 20h.01"/></symbol>
 <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></symbol>
 <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/></symbol>
-<symbol id="i-power" viewBox="0 0 24 24"><path d="M12 3v9M6.3 6.8a8 8 0 1 0 11.4 0"/></symbol>
-<symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></symbol>
-<symbol id="i-stop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></symbol>
 <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
 <symbol id="p-grass" viewBox="0 0 8 8"><rect width="8" height="8" fill="#866043"/><rect width="8" height="2" fill="#5fae3a"/><path fill="#5fae3a" d="M0 2h1v1H0zM3 2h2v1H3zM6 2h1v1H6z"/><path fill="#6f4e37" d="M1 4h1v1H1zM5 3h1v1H5zM3 5h1v1H3zM6 6h1v1H6zM1 7h1v1H1z"/></symbol>
 <symbol id="p-creeper" viewBox="0 0 8 8"><rect width="8" height="8" fill="#4cb034"/><path fill="#2e7d22" d="M0 0h1v1H0zM3 0h2v1H3zM7 1h1v1H7zM0 5h1v1H0zM7 6h1v1H7zM4 7h2v1H4z"/><path fill="#0b1a0b" d="M1 2h2v2H1zM5 2h2v2H5zM3 4h2v1H3zM2 5h4v2H2z"/><path fill="#4cb034" d="M3 6h2v1H3z"/></symbol>
-<symbol id="p-pick" viewBox="0 0 8 8"><path fill="#7a5230" d="M2 6h1v1H2zM3 5h1v1H3zM4 4h1v1H4zM5 3h1v1H5z"/><path fill="#4fe3d6" d="M1 1h4v1H1zM0 2h1v1H0zM5 2h1v1H5zM6 3h1v1H6zM1 0h3v1H1z"/><path fill="#2aa79c" d="M6 4h1v1H6zM5 2h1v1H5z"/></symbol>
+<symbol id="p-pick" viewBox="0 0 8 8"><path fill="#7a5230" d="M2 6h1v1H2zM3 5h1v1H3zM4 4h1v1H4zM5 3h1v1H5z"/><path fill="#4fe3d6" d="M1 1h4v1H1zM0 2h1v1H0zM5 2h1v1H5zM6 3h1v1H6zM1 0h3v1H1z"/></symbol>
 <symbol id="p-heart" viewBox="0 0 8 8"><path fill="#e03131" d="M1 1h2v1H1zM5 1h2v1H5zM0 2h8v2H0zM1 4h6v1H1zM2 5h4v1H2zM3 6h2v1H3z"/><path fill="#ff8787" d="M1 2h1v1H1z"/></symbol>
-</defs>
-</svg>
+<symbol id="p-crown" viewBox="0 0 8 8"><path fill="#ffd54a" d="M0 2h1v4H0zM7 2h1v4H7zM3 1h2v5H3zM1 3h2v3H1zM5 3h2v3H5z"/><path fill="#b8860b" d="M0 6h8v1H0z"/></symbol>
+</defs></svg>
 
 <aside class="side">
   <nav class="panel nav">
     <div class="logo"><svg class="px"><use href="#p-grass"/></svg>Sarifon Ki<br>Minecraft</div>
-    <a data-go="top"><svg class="i"><use href="#i-home"/></svg>Home</a>
+    <a data-go="top" class="on"><svg class="i"><use href="#i-home"/></svg>Home</a>
     <a data-go="health"><svg class="i"><use href="#i-pulse"/></svg>Server health</a>
     <a data-go="leaderboard"><svg class="i"><use href="#i-users"/></svg>Leaderboard</a>
     <a data-go="schedule"><svg class="i"><use href="#i-cal"/></svg>Schedule</a>
     <a data-go="logs"><svg class="i"><use href="#i-search"/></svg>Search events</a>
+    <a href="/admin"><svg class="i"><use href="#i-lock"/></svg>Admin panel</a>
   </nav>
   <div class="panel lib">
     <h3>Your library</h3>
     <button class="item" id="sCopy"><div class="art"><svg class="px" width="28" height="28"><use href="#p-creeper"/></svg></div><div><b id="sServer">Server</b><span>Tap to copy address</span></div></button>
     <button class="item" id="sExport"><div class="art"><svg class="i"><use href="#i-download"/></svg></div><div><b>Export logs</b><span id="sLogs">0 events</span></div></button>
     <button class="item" id="sBell"><div class="art"><svg class="i"><use href="#i-bell"/></svg></div><div><b>Alerts</b><span id="sBellT">Off</span></div></button>
-    <button class="item red" id="sRestart"><div class="art"><svg class="i"><use href="#i-power"/></svg></div><div><b>Restart bot</b><span>Stop &amp; start again</span></div></button>
-    <button class="item red" id="sStop"><div class="art"><svg class="i"><use href="#i-stop"/></svg></div><div><b>Stop bot</b><span>Bot ko offline karo</span></div></button>
-    <button class="item" id="sStart" hidden><div class="art"><svg class="i"><use href="#i-play"/></svg></div><div><b>Start bot</b><span>Bot ko online karo</span></div></button>
   </div>
 </aside>
 
 <main class="main" id="main">
-  <div class="top"><span class="pill" id="link"><span class="dot"></span><span id="linkT">Connecting</span></span><span class="pill" id="updated">—</span></div>
+  <div class="top">
+    <div class="chips"><button class="chip" data-go="health">Health</button><button class="chip" data-go="leaderboard">Board</button><button class="chip" data-go="schedule">Schedule</button><button class="chip" data-go="logs">Logs</button><a class="chip" href="/admin">🔒 Admin</a></div>
+    <span class="pill" id="link"><span class="dot"></span><span id="linkT">Connecting</span></span><span class="pill" id="updated">—</span>
+  </div>
 
   <section class="hero" id="top">
-    <div class="cover"><svg class="px"><use href="#p-creeper"/></svg><img id="skin" alt="" hidden /></div>
+    <div class="cover"><svg class="px"><use href="#p-creeper"/></svg></div>
     <div class="t">
       <div class="type">Minecraft server</div>
       <h1>Sarifon Ki Minecraft</h1>
@@ -327,12 +261,10 @@ h1{margin:6px 0 14px;font-size:clamp(34px,7vw,84px);line-height:1;font-weight:90
     <button class="ib" id="bell" title="Alerts" aria-label="Alerts"><svg class="i"><use href="#i-bell"/></svg></button>
     <button class="ib" id="copyBtn" title="Copy address" aria-label="Copy address"><svg class="i"><use href="#i-copy"/></svg></button>
     <button class="ib" id="exportBtn" title="Export logs" aria-label="Export logs"><svg class="i"><use href="#i-download"/></svg></button>
-    <button class="rbtn" id="restart"><svg class="i"><use href="#i-power"/></svg>Restart bot</button>
-    <button class="rbtn" id="stopBtn"><svg class="i"><use href="#i-stop"/></svg>Stop bot</button>
-    <button class="sbtn" id="startBtn" hidden><svg class="i"><use href="#i-play"/></svg>Start bot</button>
+    <a class="admin-btn" href="/admin"><svg class="i"><use href="#i-lock"/></svg>Admin panel</a>
   </div>
 
-  <section class="sec">
+  <section class="sec rv">
     <h2>At a glance</h2>
     <div class="cards">
       <div class="card"><div class="ico"><svg class="i"><use href="#i-pulse"/></svg></div><div class="l">Status</div><div class="v" id="cStatus">—</div></div>
@@ -344,7 +276,7 @@ h1{margin:6px 0 14px;font-size:clamp(34px,7vw,84px);line-height:1;font-weight:90
     </div>
   </section>
 
-  <section class="sec" id="health">
+  <section class="sec rv" id="health">
     <h2>Server health</h2>
     <div class="health">
       <div class="card"><div class="l">Status history (this tab)</div><div class="timeline" id="timeline"></div><div class="small" id="onlinePct">—</div></div>
@@ -357,67 +289,54 @@ h1{margin:6px 0 14px;font-size:clamp(34px,7vw,84px);line-height:1;font-weight:90
     </div>
   </section>
 
-  <section class="sec" id="leaderboard">
-  <h2>Leaderboard</h2>
+  <section class="sec rv" id="leaderboard">
+    <h2>Leaderboard</h2>
+    <div class="lb-label">Ownership</div>
+    <div class="owner">
+      <svg class="px crown" viewBox="0 0 8 8"><use href="#p-crown"/></svg>
+      <div class="ava"><img src="https://mc-heads.net/avatar/ashif_noway/168" alt="ashif_noway" onerror="this.style.display='none'"></div>
+      <div style="position:relative;z-index:1"><span class="chipx">OWNER</span><h3>ashif_noway</h3><p>Sarifon Ki Minecraft ke malik &amp; founder</p></div>
+    </div>
 
-  <div class="lb-label">Ownership</div>
-  <div class="owner">
-    <svg class="px crown" viewBox="0 0 8 8"><path fill="#ffd54a" d="M0 2h1v4H0zM7 2h1v4H7zM3 1h2v5H3zM1 3h2v3H1zM5 3h2v3H5z"/><path fill="#b8860b" d="M0 6h8v1H0z"/><path fill="#e03131" d="M3 3h2v1H3z"/></svg>
-    <div class="ava"><img src="https://mc-heads.net/avatar/ashif_noway/168" alt="ashif_noway" onerror="this.style.display='none'"></div>
-    <div style="position:relative;z-index:1">
-      <span class="chipx">OWNER</span>
-      <h3>ashif_noway</h3>
-      <p>Sarifon Ki Minecraft ke malik &amp; founder</p>
+    <div class="lb-label">Top players</div>
+    <div class="podium">
+      <div class="pod p2"><div class="ava"><img src="https://mc-heads.net/avatar/Operator/128" alt="Operator" onerror="this.style.display='none'"></div><div><b>Operator</b><span class="t">Iron rank</span></div><div class="step">#2</div></div>
+      <div class="pod p1"><svg class="px crown" viewBox="0 0 8 8"><use href="#p-crown"/></svg><div class="ava"><img src="https://mc-heads.net/avatar/abhi17yt/168" alt="abhi17yt" onerror="this.style.display='none'"></div><div><b>abhi17yt</b><span class="t">Gold rank &bull; Champion</span></div><div class="step">#1</div></div>
+      <div class="pod p3"><div class="ava"><img src="https://mc-heads.net/avatar/ashif_gamerhz7/128" alt="ashif_gamerhz7" onerror="this.style.display='none'"></div><div><b>ashif_gamerhz7</b><span class="t">Copper rank</span></div><div class="step">#3</div></div>
     </div>
-  </div>
 
-  <div class="lb-label">Top players</div>
-  <div class="podium">
-    <div class="pod p2">
-      <div class="ava"><img src="https://mc-heads.net/avatar/Operator/128" alt="Operator" onerror="this.style.display='none'"></div>
-      <div><b>Operator</b><span class="t">Iron rank</span></div><div class="step">#2</div>
-    </div>
-    <div class="pod p1">
-      <svg class="px crown" viewBox="0 0 8 8"><path fill="#ffd54a" d="M0 2h1v4H0zM7 2h1v4H7zM3 1h2v5H3zM1 3h2v3H1zM5 3h2v3H5z"/><path fill="#b8860b" d="M0 6h8v1H0z"/></svg>
-      <div class="ava"><img src="https://mc-heads.net/avatar/abhi17yt/168" alt="abhi17yt" onerror="this.style.display='none'"></div>
-      <div><b>abhi17yt</b><span class="t">Gold rank &bull; Champion</span></div><div class="step">#1</div>
-    </div>
-    <div class="pod p3">
-      <div class="ava"><img src="https://mc-heads.net/avatar/ashif_gamerhz7/128" alt="ashif_gamerhz7" onerror="this.style.display='none'"></div>
-      <div><b>ashif_gamerhz7</b><span class="t">Copper rank</span></div><div class="step">#3</div>
-    </div>
-  </div>
-
-  <div class="lb-label">Cutest player</div>
-  <div class="cutie">
-    <svg class="px hh" viewBox="0 0 8 8"><use href="#p-heart"/></svg><svg class="px hh" viewBox="0 0 8 8"><use href="#p-heart"/></svg>
-    <svg class="px hh" viewBox="0 0 8 8"><use href="#p-heart"/></svg><svg class="px hh" viewBox="0 0 8 8"><use href="#p-heart"/></svg>
-    <div class="ava"><img src="https://mc-heads.net/avatar/cookie39795/192" alt="cookie39795" onerror="this.style.display='none'"></div>
-    <div>
-      <small>Sabse cute player</small>
-      <h3>cookie39795</h3>
-      <p>Poore server ki cutie, sabka favourite</p>
-    </div>
-    <svg class="px ck" viewBox="0 0 8 8"><path fill="#c68642" d="M2 0h4v1h1v1h1v4H7v1H6v1H2V7H1V6H0V2h1V1h1z"/><path fill="#5a3418" d="M2 2h1v1H2zM5 1h1v1H5zM4 4h1v1H4zM2 5h1v1H2zM6 5h1v1H6z"/></svg>
-  </div>
-</section>
-
-  <section class="sec" id="schedule">
-    <h2>Schedule</h2>
-    <div class="sch-head">
-      <label class="sw"><input type="checkbox" id="schEnabled" />Schedule ON</label>
-      <span class="small" id="schTz">—</span>
-    </div>
-    <div class="sch-next off" id="schNext">Schedule off hai</div>
-    <div class="small" style="margin-bottom:12px">Bot Join time par Minecraft me aayega aur Leave time par nikal jayega. Raat wala slot bhi chalega (jaise 22:00 → 02:00).</div>
-    <div id="slots"></div>
-    <div class="sch-act">
-      <button class="gbtn" id="addSlot">+ Add slot</button>
-      <button class="sbtn" id="saveSch">Save schedule</button>
+    <div class="lb-label">Cutest player</div>
+    <div class="cutie">
+      <span class="fl">💖</span><span class="fl">🌸</span><span class="fl">💗</span><span class="fl">✨</span><span class="fl">🎀</span><span class="fl">💕</span><span class="tw">✨</span>
+      <div class="gal">
+        <svg class="px" viewBox="0 0 12 13" aria-label="Cute pixel girl">
+          <path fill="#ff7eb6" d="M2 0h8v1H2zM1 1h10v8H1zM0 4h1v6H0zM11 4h1v6h-1z"/>
+          <path fill="#ffe3cf" d="M2 3h8v5H2z"/>
+          <path fill="#ff7eb6" d="M2 3h2v1H2zM5 3h2v1H5zM8 3h2v1H8z"/>
+          <path fill="#3b1d3a" d="M3 5h1v2H3zM8 5h1v2H8z"/><path fill="#fff" d="M3 5h1v1H3zM8 5h1v1H8z"/>
+          <path fill="#ff9ab8" d="M2 7h2v1H2zM8 7h2v1H8z"/><path fill="#e0557f" d="M5 7h2v1H5z"/>
+          <path fill="#ff3d81" d="M1 0h2v2H1zM4 0h2v2H4z"/><path fill="#ffd1e3" d="M3 0h1v2H3z"/>
+          <path fill="#ffb3d1" d="M3 9h6v4H3z"/>
+        </svg>
+      </div>
+      <div>
+        <span class="tag">🎀 Sabse cute player</span>
+        <h3>cookie39795</h3>
+        <p>Poore server ki pookie cutie, sabka favourite 💕</p>
+        <div class="meter">Cuteness <i></i> 100%</div>
+      </div>
     </div>
   </section>
 
-  <section class="sec" id="logs">
+  <section class="sec rv" id="schedule">
+    <h2>Schedule</h2>
+    <div class="small" id="schTz">—</div>
+    <div class="sch-next off" id="schNext">Schedule off hai</div>
+    <div class="slots" id="slots"></div>
+    <div class="small" style="margin-top:12px">Schedule badalne ke liye Admin panel kholo.</div>
+  </section>
+
+  <section class="sec rv" id="logs">
     <h2>Event log</h2>
     <div class="toolbar">
       <button class="chip on" data-f="all">All</button><button class="chip" data-f="success">Success</button><button class="chip" data-f="info">Info</button><button class="chip" data-f="warn">Warnings</button><button class="chip" data-f="error">Errors</button>
@@ -428,10 +347,7 @@ h1{margin:6px 0 14px;font-size:clamp(34px,7vw,84px);line-height:1;font-weight:90
 </main>
 
 <footer class="player">
-  <div class="np">
-    <div class="c"><svg class="px"><use href="#p-creeper"/></svg><img id="skin2" alt="" hidden /></div>
-    <div style="min-width:0"><b>Sarifon Ki Minecraft</b><span id="npSub">Starting…</span></div>
-  </div>
+  <div class="np"><div class="c"><svg class="px"><use href="#p-creeper"/></svg></div><div style="min-width:0"><b>Sarifon Ki Minecraft</b><span id="npSub">Starting…</span></div></div>
   <div class="ctrl">
     <div class="btns">
       <button class="ib" id="pMusic" title="Music on/off" aria-label="Music"><svg class="i"><use href="#i-music"/></svg></button>
@@ -440,10 +356,7 @@ h1{margin:6px 0 14px;font-size:clamp(34px,7vw,84px);line-height:1;font-weight:90
     </div>
     <div class="prog"><span id="pTime">0:00</span><div class="track"><div class="fill" id="fill"></div></div><span>LIVE</span></div>
   </div>
-  <div class="right">
-    <div class="upb"><svg class="i"><use href="#i-clock"/></svg><span>Bot uptime</span><b id="pUp">Offline</b></div>
-    <span class="lk"><svg class="i"><use href="#i-wifi"/></svg><span id="pLink">—</span></span>
-  </div>
+  <div class="right"><div class="upb"><svg class="i"><use href="#i-clock"/></svg><span>Bot uptime</span><b id="pUp">Offline</b></div><span class="lk"><svg class="i"><use href="#i-wifi"/></svg><span id="pLink">—</span></span></div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -457,17 +370,12 @@ const niceStatus=s=>({online:'Online',connecting:'Connecting…',starting:'Start
 const lvIcon={success:'check',error:'x',warn:'alert',info:'info'}
 const ic=n=>`<svg class="i"><use href="#i-${n}"/></svg>`
 const tm=iso=>iso?new Date(iso).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—'
-let last=null,filter='all',query='',onlineSince=null,prev=null,hist=[],alerts=false,skinUser=null
-let draft={enabled:false,slots:[]},dirty=false
+let last=null,filter='all',query='',onlineSince=null,prev=null,hist=[],alerts=false
 
 function toast(m){const e=$('toast');e.textContent=m;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),2500)}
 function fmt(ms){const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h}h ${m}m ${s%60}s`:m?`${m}m ${s%60}s`:`${s}s`}
 function clock(ms){const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60);return (h?h+':'+String(m).padStart(2,'0'):m)+':'+String(s%60).padStart(2,'0')}
 function setLink(ok){$('link').classList.toggle('ok',ok);$('linkT').textContent=ok?'Live stream':'Polling';$('pLink').textContent=ok?'Live':'Polling'}
-function setSkin(u){
-  if(!u||u===skinUser)return;skinUser=u
-  ;['skin','skin2'].forEach(id=>{const i=$(id);i.hidden=true;i.onload=()=>i.hidden=false;i.onerror=()=>i.hidden=true;i.src=`https://mc-heads.net/avatar/${encodeURIComponent(u)}/232`})
-}
 
 function renderLogs(){
   if(!last)return
@@ -479,49 +387,27 @@ function renderLogs(){
     :`<div class="empty">${all.length?'No events match your filter':'No events yet. Creeper is quiet.'}</div>`
   $('sLogs').textContent=`${all.length} event${all.length===1?'':'s'}`
 }
-
 function renderTimeline(){
   $('timeline').innerHTML=hist.slice(-70).map(s=>`<i class="${esc(s)}"></i>`).join('')
   const on=hist.filter(s=>s==='online').length
   $('onlinePct').textContent=hist.length?`${Math.round(on/hist.length*100)}% online across ${hist.length} updates`:'Waiting for data'
 }
-
 function renderPlayers(d){
   const on=d.status==='online',n=d.players||0,names=d.playerNames||[]
   $('players').textContent=on?(n+(d.maxPlayers?' / '+d.maxPlayers:'')):'—'
   $('playerNames').textContent=on?(n?names.slice(0,6).join(', ')+(names.length>6?' +'+(names.length-6):''):'Koi player online nahi'):'Bot offline'
 }
-
-/* ---------- Schedule UI ---------- */
-function renderSlots(){
-  $('schEnabled').checked=draft.enabled
-  $('slots').innerHTML=draft.slots.length?draft.slots.map((s,i)=>`<div class="slot">
-    <label>Join<input type="time" data-i="${i}" data-k="join" value="${esc(s.join)}" /></label>
-    <label>Leave<input type="time" data-i="${i}" data-k="leave" value="${esc(s.leave)}" /></label>
-    <button class="ib" data-del="${i}" title="Remove slot" aria-label="Remove slot">${ic('x')}</button></div>`).join('')
-    :'<div class="empty" style="padding:18px">Koi slot nahi. "Add slot" dabao.</div>'
-}
-function inMinText(m){const h=Math.floor(m/60),mm=m%60;return h?`${h}h ${mm}m`:`${mm}m`}
-function renderSchedInfo(sc){
+function renderSchedule(sc){
   if(!sc)return
   $('schTz').textContent=`Timezone: ${sc.tz} • Abhi: ${sc.now}`
-  const el=$('schNext'),n=sc.next
-  if(sc.enabled&&n){el.className='sch-next';el.textContent=`Next: bot ${n.type==='join'?'JOIN karega':'LEAVE karega'} ${n.time} baje (${inMinText(n.inMin)} me)`}
+  const el=$('schNext'),n=sc.next,h=Math.floor((n?n.inMin:0)/60),m=n?n.inMin%60:0
+  if(sc.enabled&&n){el.className='sch-next';el.textContent=`Next: bot ${n.type==='join'?'JOIN karega':'LEAVE karega'} ${n.time} baje (${h?h+'h ':''}${m}m me)`}
   else{el.className='sch-next off';el.textContent='Schedule off hai'}
+  $('slots').innerHTML=(sc.slots||[]).map(s=>`<span class="slotv">${esc(s.join)} → ${esc(s.leave)}</span>`).join('')
 }
-function syncSchedule(sc){
-  renderSchedInfo(sc)
-  if(!sc||dirty)return
-  draft={enabled:!!sc.enabled,slots:(sc.slots||[]).map(s=>({join:s.join,leave:s.leave}))}
-  renderSlots()
-}
-
 function render(d){
   last=d;const s=d.status||''
   document.body.className=s
-  const isStopped=s==='stopped'
-  ;['stopBtn','sStop'].forEach(id=>$(id).hidden=isStopped)
-  ;['startBtn','sStart'].forEach(id=>$(id).hidden=!isStopped)
   const name=d.serverName||'Sarifon Ki Minecraft'
   $('statusText').textContent=niceStatus(s);$('cStatus').textContent=niceStatus(s)
   $('message').textContent=d.message||'—'
@@ -531,32 +417,27 @@ function render(d){
   $('error').textContent=d.lastError||'None'
   $('updated').textContent=`Updated ${new Date().toLocaleTimeString()}`
   $('npSub').textContent=`${d.username||'Bot'} • ${niceStatus(s)}`
-  setSkin(d.username);renderPlayers(d);syncSchedule(d.schedule)
+  renderPlayers(d);renderSchedule(d.schedule)
   if(s!==prev){
     if(prev!==null){toast(`Bot is ${niceStatus(s).replace('…','').toLowerCase()}`)
       if(alerts&&'Notification'in window&&Notification.permission==='granted')new Notification(name,{body:`Bot status: ${niceStatus(s)}`})}
     prev=s
   }
-  // asli uptime: bot ke connect hone ke time se
   onlineSince=s==='online'?(d.lastConnected?new Date(d.lastConnected).getTime():(onlineSince||Date.now())):null
   hist.push(s);if(hist.length>300)hist.shift()
   const lg=d.logs||[],c=k=>lg.filter(l=>l.level===k).length
   $('cSuccess').textContent=c('success');$('cInfo').textContent=c('info');$('cWarn').textContent=c('warn');$('cError').textContent=c('error')
   renderTimeline();renderLogs()
 }
-
 setInterval(()=>{
-  const ms=onlineSince?Date.now()-onlineSince:0
-  const t=onlineSince?fmt(ms):'—'
-  $('uptime').textContent=t
-  $('uptimeHero').textContent=onlineSince?`Up ${t}`:'Not running'
-  $('pTime').textContent=onlineSince?clock(ms):'0:00'
-  $('pUp').textContent=onlineSince?t:'Offline'
+  const ms=onlineSince?Date.now()-onlineSince:0,t=onlineSince?fmt(ms):'—'
+  $('uptime').textContent=t;$('uptimeHero').textContent=onlineSince?`Up ${t}`:'Not running'
+  $('pTime').textContent=onlineSince?clock(ms):'0:00';$('pUp').textContent=onlineSince?t:'Offline'
   $('fill').style.width=onlineSince?((ms%3600000)/36000)+'%':'0%'
 },1000)
 
 async function load(){try{const r=await fetch('/api/status',{cache:'no-store'});render(await r.json());return true}catch(e){$('updated').textContent='Connection lost';return false}}
-async function refresh(){['refresh','pRefresh'].forEach(i=>$(i).classList.add('spin'));const ok=await load();setTimeout(()=>['refresh','pRefresh'].forEach(i=>$(i).classList.remove('spin')),800);toast(ok?'Status refreshed':'Cannot reach the bot server')}
+async function refresh(){const b=['refresh','pRefresh'].map($);b.forEach(x=>x.classList.add('spin'));const ok=await load();setTimeout(()=>b.forEach(x=>x.classList.remove('spin')),800);toast(ok?'Status refreshed':'Cannot reach the bot server')}
 async function copyAddr(){const v=last?.server;if(!v)return toast('No server address yet');try{await navigator.clipboard.writeText(v);toast('Server address copied')}catch{toast('Copy failed')}}
 function exportLogs(){if(!last?.logs?.length)return toast('No logs to export');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(last.logs,null,2)],{type:'application/json'}));a.download=`sarifon-minecraft-logs-${Date.now()}.json`;a.click();toast('Logs exported')}
 async function toggleAlerts(){
@@ -565,67 +446,22 @@ async function toggleAlerts(){
   else{const p=Notification.permission==='granted'?'granted':await Notification.requestPermission();if(p!=='granted')return toast('Notification permission denied');alerts=true}
   $('bell').classList.toggle('on',alerts);$('sBellT').textContent=alerts?'On':'Off';toast(alerts?'Alerts on':'Alerts off')
 }
-async function restartBot(){
-  if(!confirm('Bot restart karna hai? Bot Minecraft se disconnect hoke dobara start hoga.'))return
-  const b=$('restart');b.disabled=true
-  try{
-    let r=await fetch('/api/restart',{method:'POST'})
-    if(r.status===403){const k=prompt('Restart key daalo');if(!k){b.disabled=false;return}r=await fetch('/api/restart?key='+encodeURIComponent(k),{method:'POST'})}
-    toast(r.ok?'Bot restart ho raha hai…':(r.status===403?'Galat key':'Restart pehle se chal raha hai'))
-  }catch{toast('Server tak nahi pahuncha')}
-  setTimeout(()=>{b.disabled=false},4000)
-}
-async function botAction(action){
-  const msgs={stop:'Bot stop ho gaya',start:'Bot start ho raha hai…'}
-  if(action==='stop'&&!confirm('Bot ko poora stop karna hai? Jab tak Start nahi dabaoge tab tak offline rahega.'))return
-  const btns=['stopBtn','sStop','startBtn','sStart'].map($);btns.forEach(b=>b.disabled=true)
-  try{
-    let r=await fetch('/api/'+action,{method:'POST'})
-    if(r.status===403){const k=prompt('Key daalo');if(!k){btns.forEach(b=>b.disabled=false);return}r=await fetch('/api/'+action+'?key='+encodeURIComponent(k),{method:'POST'})}
-    toast(r.ok?msgs[action]:(r.status===403?'Galat key':'Ye action abhi possible nahi'))
-  }catch{toast('Server tak nahi pahuncha')}
-  setTimeout(()=>btns.forEach(b=>b.disabled=false),2000)
-}
-async function saveSchedule(){
-  for(const s of draft.slots){
-    if(!s.join||!s.leave)return toast('Har slot me Join aur Leave time bharo')
-    if(s.join===s.leave)return toast('Join aur Leave time alag hone chahiye')
-  }
-  if(draft.enabled&&!draft.slots.length)return toast('Schedule ON karne ke liye pehle slot add karo')
-  const b=$('saveSch');b.disabled=true
-  const body=JSON.stringify(draft),opt={method:'POST',headers:{'Content-Type':'application/json'},body}
-  try{
-    let r=await fetch('/api/schedule',opt)
-    if(r.status===403){const k=prompt('Key daalo');if(!k){b.disabled=false;return}r=await fetch('/api/schedule?key='+encodeURIComponent(k),opt)}
-    if(r.ok){dirty=false;const j=await r.json();syncSchedule(j.schedule);toast('Schedule save ho gaya')}
-    else toast(r.status===403?'Galat key':'Schedule save nahi hua')
-  }catch{toast('Server tak nahi pahuncha')}
-  setTimeout(()=>{b.disabled=false},1000)
-}
-
 $('refresh').onclick=$('pRefresh').onclick=refresh
 $('copyBtn').onclick=$('pCopy').onclick=$('cardCopy').onclick=$('sCopy').onclick=copyAddr
 $('exportBtn').onclick=$('sExport').onclick=exportLogs
 $('bell').onclick=$('sBell').onclick=toggleAlerts
-$('restart').onclick=$('sRestart').onclick=restartBot
-$('stopBtn').onclick=$('sStop').onclick=()=>botAction('stop')
-$('startBtn').onclick=$('sStart').onclick=()=>botAction('start')
-$('schEnabled').onchange=e=>{draft.enabled=e.target.checked;dirty=true}
-$('addSlot').onclick=()=>{if(draft.slots.length>=12)return toast('Max 12 slots');draft.slots.push({join:'18:00',leave:'23:00'});dirty=true;renderSlots()}
-$('slots').oninput=e=>{const t=e.target;if(t.dataset.k){draft.slots[t.dataset.i][t.dataset.k]=t.value;dirty=true}}
-$('slots').onclick=e=>{const b=e.target.closest('[data-del]');if(b){draft.slots.splice(Number(b.dataset.del),1);dirty=true;renderSlots()}}
-$('saveSch').onclick=saveSchedule
 document.querySelectorAll('[data-go]').forEach(a=>a.onclick=()=>{a.dataset.go==='top'?$('main').scrollTo({top:0,behavior:'smooth'}):$(a.dataset.go).scrollIntoView({behavior:'smooth'})})
-document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));b.classList.add('on');filter=b.dataset.f;renderLogs()})
+document.querySelectorAll('.toolbar .chip').forEach(b=>b.onclick=()=>{document.querySelectorAll('.toolbar .chip').forEach(x=>x.classList.remove('on'));b.classList.add('on');filter=b.dataset.f;renderLogs()})
 $('q').oninput=e=>{query=e.target.value.trim().toLowerCase();renderLogs()}
 $('rows').onclick=e=>{const r=e.target.closest('.row');if(r)r.classList.toggle('open')}
 
+// scroll reveal + active nav
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{root:$('main'),threshold:.08})
+document.querySelectorAll('.rv').forEach(el=>io.observe(el))
+
 const music=$('music');music.volume=.6
 music.onplay=music.onpause=()=>$('pMusic').classList.toggle('on',!music.paused)
-$('enter').onclick=()=>{
-  $('gate').classList.add('hide');setTimeout(()=>$('gate').remove(),550)
-  music.play().catch(()=>toast('Song start nahi hua, music button dabao'))
-}
+$('enter').onclick=()=>{$('gate').classList.add('hide');setTimeout(()=>$('gate').remove(),550);music.play().catch(()=>toast('Song start nahi hua, music button dabao'))}
 $('pMusic').onclick=()=>music.paused?music.play().catch(()=>toast('Song play nahi hua')):music.pause()
 
 if('EventSource'in window){
